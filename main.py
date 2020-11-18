@@ -1,27 +1,31 @@
 import requests
-from github import Github
-import datetime
 
-o_auth_code = "3973464c1860b6ec92b64b87e0b50570c0a14227"
-username = "aau-giraf"
-url = f"https://api.github.com/repo/{username}"
-# pygithub object
-g = Github(o_auth_code)
-# get that user by username
-user = g.get_user(username)
-#file = open("output.txt", "w+")
-output = ""
+token = "3973464c1860b6ec92b64b87e0b50570c0a14227"
+username = "dkalaxdk"
+headers = {'Authorization': 'token ' + token}
 
-date = datetime.datetime(2020, 9, 1, 0, 0)
+closed_date = "closed:>2020-09-01"
+query = "??" + closed_date
+api_root = "https://api.github.com/"
+request_header = {'Accept': 'application/vnd.github.v3+json'}
+repositories = ["weekplanner", "web-api", "api_client", "wiki"]
 
-for repo in user.get_repos():
-    if repo.pushed_at.month == datetime.date.today().month:
-        print(repo.__str__())
+all_pr_and_issues = {}
+issues = {}
 
-        print("=================================================== \n \n \n")
-        print("Issues:")
-        print("===================================================")
-        for issue in repo.get_issues(state="closed", since=date):
-            print("    " + issue.title)
-            issue.
-        print("=================================================== \n \n \n")
+for repository in repositories:
+    response = requests.get(api_root + "repos/aau-giraf/" + repository + "/issues" + query,
+                            headers=headers)
+    temp_pull_requests = []
+    temp_issues = {}
+
+    for output in response.json():
+        if not output.get('pull_request'):
+            temp_issues[output('number')] = {"title": output['title'], "body": output['body']}
+
+    for output in response.json():
+        if output.get('pull_request'):
+            temp_pull_requests.append(output['title'])
+
+    pr_and_issues = {"issues": temp_issues, "pr": temp_pull_requests}
+    all_pr_and_issues[repository] = pr_and_issues
