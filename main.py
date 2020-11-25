@@ -9,7 +9,7 @@ import datetime as dt
 # When writing latex, some packages are used: Longtable, caption
 
 def api_fetcher_and_sorter(config):
-    query = "?" + config['state']
+    query = "?" + "state=" + config['state']
     accept_header = 'application/vnd.github+json'
     repositories = config['repositories']
     api_root = "https://api.github.com/"
