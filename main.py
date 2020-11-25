@@ -8,12 +8,12 @@ import datetime as dt
 # When writing markdown, no packages are used, uses Github Flavoured Markdown.
 # When writing latex, some packages are used: Longtable, caption
 
-def api_fetcher_and_sorter(data):
-    query = "?state=closed"
+def api_fetcher_and_sorter(config):
+    query = "?" + config['state']
     accept_header = 'application/vnd.github+json'
-    repositories = data['repositories']
+    repositories = config['repositories']
     api_root = "https://api.github.com/"
-    headers = {'Authorization': 'token ' + data['token'], 'Accept': accept_header}
+    headers = {'Authorization': 'token ' + config['token'], 'Accept': accept_header}
     pull_requests_and_issues = {}
     for repository in repositories:
         response = requests.get(api_root + "repos/aau-giraf/" + repository + "/issues" + query,
@@ -23,17 +23,13 @@ def api_fetcher_and_sorter(data):
         for output in response.json():
             # Checks for a valid response from the Github API.
             if response.ok:
-                if date_time_check(output['closed_at'], data):
-                    if "Revert" not in output['title'] or "Merge" not in output['title']:
-                        if not output.get('pull_request'):
-                            if output['number'] not in temp_issues:
-                                temp_issues[output['number']] = {'title': output['title'], 'body': output['body'],
-                                                                 "references": []}
-
-                        if output.get('pull_request'):
-                            if output['number'] not in temp_pull_requests:
-                                temp_pull_requests[output['number']] = {'title': output['title'],
-                                                                        'body': output['body']}
+                if config['state'] == "closed":
+                    if date_time_check(output['closed_at'], config):
+                        if "Revert" not in output['title'] or "Merge" not in output['title']:
+                            update_pr_or_issue(output, temp_issues, temp_pull_requests)
+                if config['state'] != "closed":
+                    if date_time_check(output['created_at'], config):
+                        update_pr_or_issue(output, temp_issues, temp_pull_requests)
 
                 for pull_request in temp_pull_requests.items():
                     references = re.findall(r"\d+|\.\d+", pull_request[1]['title'])
@@ -45,6 +41,7 @@ def api_fetcher_and_sorter(data):
                 print("Error receiving content from GitHub")
                 print(response.json())
                 break
+
         pull_requests_and_issues[repository] = {"issues": temp_issues, "pr": temp_pull_requests}
     return pull_requests_and_issues
 
@@ -59,29 +56,43 @@ def unique_list_function(references, repository):
     return unique_list
 
 
-def date_time_check(closed_at, data):
+def update_pr_or_issue(output, temp_issues, temp_pull_requests):
+    if not output.get('pull_request'):
+        if output['number'] not in temp_issues:
+            temp_issues[output['number']] = {'title': output['title'], 'body': output['body'],
+                                             "references": []}
+
+    if output.get('pull_request'):
+        if output['number'] not in temp_pull_requests:
+            temp_pull_requests[output['number']] = {'title': output['title'],
+                                                    'body': output['body']}
+
+
+def date_time_check(closed_at, config):
     format_string = "%Y-%m-%dT%H:%M:%SZ"
     input_format = "%Y-%m-%d"
     closed_at_converted = dt.datetime.strptime(closed_at, format_string)
-    if len(data['closed_after']) > 0 and len(data['closed_before']) > 0:
-        closed_after = dt.datetime.strptime(data['closed_after'], input_format)
-        closed_before = dt.datetime.strptime(data['closed_before'], input_format)
-        return closed_at_converted > closed_after and closed_at_converted < closed_before
-    if len(data['closed_after']) > 0:
+    if len(config['from_date']) > 0 and len(config['to_date']) > 0:
+        from_date = dt.datetime.strptime(config['from_date'], input_format)
+        to_date = dt.datetime.strptime(config['to_date'], input_format)
+        return closed_at_converted > from_date and closed_at_converted < to_date
+    if len(config['from_date']) > 0:
         return closed_at_converted > dt.datetime.strptime(
-            data['closed_after'], input_format)
-    if len(data['closed_after']) > 0:
+            config['from_date'], input_format)
+    if len(config['to_date']) > 0:
         return closed_at_converted < dt.datetime.strptime(
-            data['closed_before'], input_format)
+            config['to_date'], input_format)
+    else:
+        return True
 
 
-def output_generator(pull_requests_and_issues, data):
+def output_generator(pull_requests_and_issues, config):
     output_string = ""
     f = codecs.open("output.txt", encoding='utf-8', mode='w+')
-    if data['language'] == "markdown":
+    if config['language'] == "markdown":
         for repository in pull_requests_and_issues.items():
             output_string = markdown_format(output_string, repository)
-    if data['language'] == "latex":
+    if config['language'] == "latex":
         for repository in pull_requests_and_issues.items():
             output_string = latex_format(output_string, repository)
 
@@ -138,14 +149,14 @@ def latex_format(output_string, repository):
 
 def config_reader():
     with open("configFile.json", "r") as json_file:
-        data = json.load(json_file)
-    return data
+        config = json.load(json_file)
+    return config
 
 
 def main():
-    data = config_reader()
-    pull_requests_and_issues = api_fetcher_and_sorter(data)
-    output_generator(pull_requests_and_issues, data)
+    config = config_reader()
+    pull_requests_and_issues = api_fetcher_and_sorter(config)
+    output_generator(pull_requests_and_issues, config)
 
 
 if __name__ == "__main__":
