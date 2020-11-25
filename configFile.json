@@ -1,1 +1,7 @@
-{"token": ""}
+{
+  "token": "",
+  "repositories": ["weekplanner", "web-api", "api_client", "wiki"],
+  "closed_after": "2020-09-01",
+  "closed_before": "2020-10-10",
+  "language": "latex"
+}
