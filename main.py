@@ -51,7 +51,7 @@ def unique_list_function(references, repository):
     for x in references:
         if '#' in x:
             x = x[1:]
-        if x not in unique_list and '.' not in x:
+        if f"[{x}](https://github.com/aau-giraf/{repository}/issues/{x})" not in unique_list and '.' not in x:
             unique_list.append(f"[{x}](https://github.com/aau-giraf/{repository}/issues/{x})")
     return unique_list
 
@@ -59,8 +59,12 @@ def unique_list_function(references, repository):
 def update_pr_or_issue(output, temp_issues, temp_pull_requests):
     if not output.get('pull_request'):
         if output['number'] not in temp_issues:
+            labels = []
+            for label in output['labels']:
+                if label['name'] == "type: bug" or label['name'] == "type: feature":
+                    labels.append(label['name'])
             temp_issues[output['number']] = {'title': output['title'], 'body': output['body'],
-                                             "references": []}
+                                             "labels": labels}
 
     if output.get('pull_request'):
         if output['number'] not in temp_pull_requests:
@@ -107,16 +111,18 @@ def markdown_format(output_string, repository):
     # If there are issues, write this:
     if len(issues.items()) > 0:
         output_string += "## Issues  \n"
-        output_string += "| Issue NR | Title | Fixed By | \n|:---------:|:-----|:-------------| \n"
+        output_string += "| Issue NR | Title | Labels | \n|:---------:|:-----|:-------------| \n"
         for x in issues.items():
-            output_string += f"|{x[0]} | {x[1]['title']} | {' , '.join(x[1]['references'])}| \n"
+            output_string += f"[{x[0]}](https://github.com/aau-giraf/{repository[0]}/issues/{x[0]}) | {x[1]['title']} " \
+                             f"| {' , '.join(x[1]['labels'])} | \n"
     # If there are pull requests, write this:
     if len(pull_requests.items()) > 0:
         output_string += "## Pull requests   \n"
         output_string += "| Pull NR | Title | References | \n|:---------:|:-----|:-------------| \n"
 
         for x in pull_requests.items():
-            output_string += f"| {x[0]} | {x[1]['title']} | {' , '.join(x[1]['references'])}| \n"
+            output_string += f"| [{x[0]}](https://github.com/aau-giraf/{repository[0]}/issues/{x[0]}) | {x[1]['title']} " \
+                             f"| {' , '.join(x[1]['references'])} | \n"
     return output_string
 
 
