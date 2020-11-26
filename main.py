@@ -92,16 +92,19 @@ def date_time_check(closed_at, config):
 
 def output_generator(pull_requests_and_issues, config):
     output_string = ""
-    f = codecs.open("output.txt", encoding='utf-8', mode='w+')
     if config['language'] == "markdown":
+        f = codecs.open("output.md", encoding='utf-8', mode='w+')
         for repository in pull_requests_and_issues.items():
             output_string = markdown_format(output_string, repository)
+        f.write(output_string)
+        f.close()
     if config['language'] == "latex":
+        f = codecs.open("output.tex", encoding='utf-8', mode='w+')
         for repository in pull_requests_and_issues.items():
             output_string = latex_format(output_string, repository)
+        f.write(output_string)
+        f.close()
 
-    f.write(output_string)
-    f.close()
 
 
 def markdown_format(output_string, repository):
