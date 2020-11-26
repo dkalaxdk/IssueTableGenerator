@@ -1,5 +1,8 @@
 # GirafReleaseDesigner
 This python script will generate a markdown table, containing the issues and pull requests, closed in a given time period within Giraf. <br>
 It will also add a relation between issues and pull requests, if the naming convention from the project is used. <br>
+1. Copy the configFile-template.json to file named configFile.json
+2. Update the values to match your criteria.
+
 To use this script, a developer code needs to be made through [GitHub](https://github.com/settings/tokens), and placed in the config file.
 Within the config file, a start and end date can also be defined, as well as the repositories that should be scanned.
