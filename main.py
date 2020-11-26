@@ -50,6 +50,7 @@ def unique_list_function(references, repository):
     unique_list = []
     for x in references:
         if '#' in x:
+            # If it is in x then remove it from x
             x = x[1:]
         if f"[{x}](https://github.com/aau-giraf/{repository}/issues/{x})" not in unique_list and '.' not in x:
             unique_list.append(f"[{x}](https://github.com/aau-giraf/{repository}/issues/{x})")
