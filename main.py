@@ -8,69 +8,112 @@ import datetime as dt
 # When writing markdown, no packages are used, uses Github Flavoured Markdown.
 # When writing latex, some packages are used: Longtable, caption
 
-def api_fetcher_and_sorter(config):
-    query = "?" + "state=" + config['state']
-    accept_header = 'application/vnd.github+json'
-    repositories = config['repositories']
-    api_root = "https://api.github.com/"
-    headers = {'Authorization': 'token ' + config['token'], 'Accept': accept_header}
+def result_sorter(config):
     pull_requests_and_issues = {}
-    for repository in repositories:
-        response = requests.get(api_root + "repos/aau-giraf/" + repository + "/issues" + query,
-                                headers=headers)
-        temp_pull_requests = {}
-        temp_issues = {}
-        for output in response.json():
-            # Checks for a valid response from the Github API.
-            if response.ok:
-                if config['state'] == "closed":
-                    if date_time_check(output['closed_at'], config):
-                        if "Revert" not in output['title'] or "Merge" not in output['title']:
-                            update_pr_or_issue(output, temp_issues, temp_pull_requests)
-                if config['state'] != "closed":
-                    if date_time_check(output['created_at'], config):
-                        update_pr_or_issue(output, temp_issues, temp_pull_requests)
+    for repository in config['repositories']:
+        page = 1
+        count = config['per_page']
+        response = requester_functions(config, repository, page)
+        current_rep_pull_requests = {}
+        current_rep_issues = {}
+        while count == config['per_page']:
+            for output in response.json():
+                # Checks for a valid response from the Github API.
+                if response.ok:
+                    if config['state'] == "closed":
+                        if date_time_check(output['closed_at'], config):
+                            if "Revert" not in output['title'] or "Merge" not in output['title']:
+                                if len(config['labels']) > 0:
+                                    contains_correct_labels(config,output,current_rep_issues,current_rep_pull_requests)
+                                else:
+                                    update_pr_or_issue(output, current_rep_issues, current_rep_pull_requests)
+                    if config['state'] != "closed":
+                        if date_time_check(output['created_at'], config):
+                            if len(config['labels']) > 0:
+                                contains_correct_labels(config, output, current_rep_issues, current_rep_pull_requests)
+                            else:
+                                update_pr_or_issue(output, current_rep_issues, current_rep_pull_requests)
 
-                for pull_request in temp_pull_requests.items():
-                    references = re.findall(r"\d+|\.\d+", pull_request[1]['title'])
-                    references.extend(re.findall(r"#\d+", pull_request[1]['body']))
-                    # Ensuring each reference is unique
-                    pull_request[1]['references'] = unique_list_function(references, repository)
+                    for pull_request in current_rep_pull_requests.items():
+                        references = re.findall(r"/\d+|\.\d+", pull_request[1]['title'])
+                        references.extend(re.findall(r"aau-giraf/\w+#\d+|#\d+", pull_request[1]['body']))
+                        # Ensuring each reference is unique
+                        pull_request[1]['references'] = unique_list_function(references, repository)
 
-            else:
-                print("Error receiving content from GitHub")
-                print(response.json())
-                break
+                else:
+                    print("Error receiving content from GitHub")
+                    print(response.json())
+                    break
+            page += 1
+            response = requester_functions(config, repository, page)
+            count = len(response.json())
 
-        pull_requests_and_issues[repository] = {"issues": temp_issues, "pr": temp_pull_requests}
+        pull_requests_and_issues[repository] = {"issues": current_rep_issues, "pr": current_rep_pull_requests}
     return pull_requests_and_issues
 
 
-def unique_list_function(references, repository):
-    unique_list = []
-    for x in references:
-        if '#' in x:
-            # If it is in x then remove it from x
-            x = x[1:]
-        if f"[{x}](https://github.com/aau-giraf/{repository}/issues/{x})" not in unique_list and '.' not in x:
-            unique_list.append(f"[{x}](https://github.com/aau-giraf/{repository}/issues/{x})")
+def contains_correct_labels(config, output, current_rep_issues, current_rep_pull_requests):
+    for label in config['labels']:
+        for output_label in output['labels']:
+            if label in output_label['name']:
+                update_pr_or_issue(output, current_rep_issues, current_rep_pull_requests)
+
+
+def requester_functions(config, repository, page):
+    query = "?" + "state=" + config['state'] + f"&per_page={config['per_page']}&page={page}"
+    accept_header = 'application/vnd.github+json'
+    api_root = "https://api.github.com/"
+    headers = {'Authorization': 'token ' + config['token'], 'Accept': accept_header}
+    return requests.get(api_root + "repos/aau-giraf/" + repository + "/issues" + query,
+                        headers=headers)
+
+
+def unique_list_function(references, input_repository):
+    unique_list = {}
+    repository = input_repository
+    for ref in references:
+        if len(ref) > 0:
+            clean_ref = clean_reference(ref, repository)
+            if clean_ref[0] not in unique_list and '.' not in ref:
+                unique_list[clean_ref[0]] = repository
     return unique_list
 
 
-def update_pr_or_issue(output, temp_issues, temp_pull_requests):
+def clean_reference(input_string, repository):
+    if '#' in input_string[:1] or input_string[:1] == "/":
+        # If it is in x then remove it from x
+        input_string = input_string[1:]
+    if 'aau-giraf/' in input_string:
+        input_string = input_string.split("aau-giraf/")[1]
+        split = input_string.split("#")
+        repository = split[0]
+        input_string = split[1]
+    return [input_string, repository]
+
+
+def solved_by_finder(pr_and_issues):
+    for repository in pr_and_issues.items():
+        for pr in repository[1]['pr'].items():
+            for ref in pr[1]['references'].items():
+                if int(ref[0]) in pr_and_issues[ref[1]]['issues']:
+                    pr_and_issues[ref[1]]['issues'][int(ref[0])]['solved_by'][pr[0]] = repository[0]
+
+
+def update_pr_or_issue(output, issues, pull_requests):
+    # Checks whether it is a pull request
     if not output.get('pull_request'):
-        if output['number'] not in temp_issues:
+        if output['number'] not in issues:
             labels = []
             for label in output['labels']:
                 if label['name'] == "type: bug" or label['name'] == "type: feature":
                     labels.append(label['name'])
-            temp_issues[output['number']] = {'title': output['title'], 'body': output['body'],
-                                             "labels": labels}
+            issues[output['number']] = {'title': output['title'], 'body': output['body'],
+                                        "labels": labels, "solved_by": {}}
 
     if output.get('pull_request'):
-        if output['number'] not in temp_pull_requests:
-            temp_pull_requests[output['number']] = {'title': output['title'],
-                                                    'body': output['body']}
+        if output['number'] not in pull_requests:
+            pull_requests[output['number']] = {'title': output['title'],
+                                               'body': output['body']}
 
 
 def date_time_check(closed_at, config):
@@ -107,7 +150,6 @@ def output_generator(pull_requests_and_issues, config):
         f.close()
 
 
-
 def markdown_format(output_string, repository):
     output_string += f"# {repository[0]}  \n"
     issues = repository[1]['issues']
@@ -115,18 +157,32 @@ def markdown_format(output_string, repository):
     # If there are issues, write this:
     if len(issues.items()) > 0:
         output_string += "## Issues  \n"
-        output_string += "| Issue NR | Title | Labels | \n|:---------:|:-----|:-------------| \n"
-        for x in issues.items():
-            output_string += f"[{x[0]}](https://github.com/aau-giraf/{repository[0]}/issues/{x[0]}) | {x[1]['title']} " \
-                             f"| {' , '.join(x[1]['labels'])} | \n"
+        output_string += "| Issue NR | Title | Labels | Solved By | \n" \
+                         "|:---------:|:-----|:-------------|:-------------| \n"
+        for issue in issues.items():
+            pretty_references = ""
+            for reference in issue[1]['solved_by'].items():
+                pretty_references += f"[{reference[0]}](https://github.com/aau-giraf/" \
+                                     f"{reference[1]}/issues/{reference[0]}) "
+            output_string += f"|[{issue[0]}](https://github.com/aau-giraf/{repository[0]}/issues/{issue[0]}) " \
+                             f"| {issue[1]['title']} " \
+                             f"| {' , '.join(issue[1]['labels'])} " \
+                             f"| {pretty_references} | \n"
     # If there are pull requests, write this:
     if len(pull_requests.items()) > 0:
         output_string += "## Pull requests   \n"
         output_string += "| Pull NR | Title | References | \n|:---------:|:-----|:-------------| \n"
 
-        for x in pull_requests.items():
-            output_string += f"| [{x[0]}](https://github.com/aau-giraf/{repository[0]}/issues/{x[0]}) | {x[1]['title']} " \
-                             f"| {' , '.join(x[1]['references'])} | \n"
+        for pull_request in pull_requests.items():
+            pretty_references = ""
+            for reference in pull_request[1]['references'].items():
+                pretty_references += f"[{reference[0]}](https://github.com/aau-giraf/" \
+                                     f"{reference[1]}/issues/{reference[0]}) "
+
+            output_string += f"| [{pull_request[0]}](https://github.com/aau-giraf/" \
+                             f"{repository[0]}/issues/{pull_request[0]}) " \
+                             f"| {pull_request[1]['title']} " \
+                             f"| {pretty_references} | \n"
     return output_string
 
 
@@ -165,7 +221,8 @@ def config_reader():
 
 def main():
     config = config_reader()
-    pull_requests_and_issues = api_fetcher_and_sorter(config)
+    pull_requests_and_issues = result_sorter(config)
+    solved_by_finder(pull_requests_and_issues)
     output_generator(pull_requests_and_issues, config)
 
 
