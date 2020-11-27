@@ -8,7 +8,7 @@ import datetime as dt
 # When writing markdown, no packages are used, uses Github Flavoured Markdown.
 # When writing latex, some packages are used: Longtable, caption
 
-def result_sorter(config):
+def result_fetcher_and_sorter(config):
     pull_requests_and_issues = {}
     for repository in config['repositories']:
         page = 1
@@ -16,31 +16,13 @@ def result_sorter(config):
         response = requester_functions(config, repository, page)
         current_rep_pull_requests = {}
         current_rep_issues = {}
+        print(f"Fetching from: {repository}")
         while count == config['per_page']:
+            print(f"Received {len(response.json())} issues")
             for output in response.json():
                 # Checks for a valid response from the Github API.
                 if response.ok:
-                    if config['state'] == "closed":
-                        if date_time_check(output['closed_at'], config):
-                            if "Revert" not in output['title'] or "Merge" not in output['title']:
-                                if len(config['labels']) > 0:
-                                    contains_correct_labels(config, output, current_rep_issues,
-                                                            current_rep_pull_requests)
-                                else:
-                                    update_pr_or_issue(output, current_rep_issues, current_rep_pull_requests)
-                    if config['state'] != "closed":
-                        if date_time_check(output['created_at'], config):
-                            if len(config['labels']) > 0:
-                                contains_correct_labels(config, output, current_rep_issues, current_rep_pull_requests)
-                            else:
-                                update_pr_or_issue(output, current_rep_issues, current_rep_pull_requests)
-
-                    for pull_request in current_rep_pull_requests.items():
-                        references = re.findall(r"/\d+|\.\d+", pull_request[1]['title'])
-                        references.extend(re.findall(r"aau-giraf/\w+#\d+|#\d+", pull_request[1]['body']))
-                        # Ensuring each reference is unique
-                        pull_request[1]['references'] = unique_list_function(references, repository)
-
+                    sort_data(config, output, current_rep_issues, current_rep_pull_requests, repository)
                 else:
                     print("Error receiving content from GitHub")
                     print(response.json())
@@ -51,6 +33,29 @@ def result_sorter(config):
 
         pull_requests_and_issues[repository] = {"issues": current_rep_issues, "pr": current_rep_pull_requests}
     return pull_requests_and_issues
+
+
+def sort_data(config, output, current_rep_issues, current_rep_pull_requests, repository):
+    if config['state'] == "closed":
+        if date_time_check(output['closed_at'], config):
+            if "Revert" not in output['title'] or "Merge" not in output['title']:
+                if len(config['labels']) > 0:
+                    contains_correct_labels(config, output, current_rep_issues,
+                                            current_rep_pull_requests)
+                else:
+                    update_pr_or_issue(output, current_rep_issues, current_rep_pull_requests)
+    if config['state'] != "closed":
+        if date_time_check(output['created_at'], config):
+            if len(config['labels']) > 0:
+                contains_correct_labels(config, output, current_rep_issues, current_rep_pull_requests)
+            else:
+                update_pr_or_issue(output, current_rep_issues, current_rep_pull_requests)
+
+    for pull_request in current_rep_pull_requests.items():
+        references = re.findall(r"/\d+|\.\d+", pull_request[1]['title'])
+        references.extend(re.findall(r"aau-giraf/\w+#\d+|#\d+", pull_request[1]['body']))
+        # Ensuring each reference is unique
+        pull_request[1]['references'] = unique_list_function(references, repository)
 
 
 def contains_correct_labels(config, output, current_rep_issues, current_rep_pull_requests):
@@ -222,9 +227,13 @@ def config_reader():
 
 def main():
     config = config_reader()
-    pull_requests_and_issues = result_sorter(config)
+    print("Fetching data...")
+    pull_requests_and_issues = result_fetcher_and_sorter(config)
+    print("Sorting outputs")
     solved_by_finder(pull_requests_and_issues)
+    print("Generating file")
     output_generator(pull_requests_and_issues, config)
+    print("File generated")
 
 
 if __name__ == "__main__":
