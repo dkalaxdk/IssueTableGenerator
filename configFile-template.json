@@ -4,5 +4,8 @@
   "from_date": "2020-09-01",
   "to_date": "",
   "state": "closed",
-  "language": "markdown"
+  "language": "markdown",
+  "per_page": "100",
+  "labels": [],
+  "type_labels": []
 }

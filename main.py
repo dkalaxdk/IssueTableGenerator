@@ -110,9 +110,10 @@ def update_pr_or_issue(output, issues, pull_requests):
     if not output.get('pull_request'):
         if output['number'] not in issues:
             labels = []
-            for label in output['labels']:
-                if label['name'] == "type: bug" or label['name'] == "type: feature":
-                    labels.append(label['name'])
+            if len(output['type_labels']) > 0:
+                for label in output['labels']:
+                    if label in output['type_labels']:
+                        labels.append(label['name'])
             issues[output['number']] = {'title': output['title'], 'body': output['body'],
                                         "labels": labels, "solved_by": {}}
 
