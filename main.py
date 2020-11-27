@@ -24,7 +24,8 @@ def result_sorter(config):
                         if date_time_check(output['closed_at'], config):
                             if "Revert" not in output['title'] or "Merge" not in output['title']:
                                 if len(config['labels']) > 0:
-                                    contains_correct_labels(config,output,current_rep_issues,current_rep_pull_requests)
+                                    contains_correct_labels(config, output, current_rep_issues,
+                                                            current_rep_pull_requests)
                                 else:
                                     update_pr_or_issue(output, current_rep_issues, current_rep_pull_requests)
                     if config['state'] != "closed":
@@ -123,7 +124,7 @@ def date_time_check(closed_at, config):
     if len(config['from_date']) > 0 and len(config['to_date']) > 0:
         from_date = dt.datetime.strptime(config['from_date'], input_format)
         to_date = dt.datetime.strptime(config['to_date'], input_format)
-        return closed_at_converted > from_date and closed_at_converted < to_date
+        return from_date < closed_at_converted < to_date
     if len(config['from_date']) > 0:
         return closed_at_converted > dt.datetime.strptime(
             config['from_date'], input_format)
