@@ -6,6 +6,7 @@
   "state": "closed",
   "language": "markdown",
   "per_page": "100",
-  "labels": [],
-  "type_labels": []
+  "required_labels": [],
+  "type_labels": [],
+  "milestones": []
 }

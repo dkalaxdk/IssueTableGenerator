@@ -6,9 +6,9 @@ import datetime as dt
 
 
 # When writing markdown, no packages are used, uses Github Flavoured Markdown.
-# When writing latex, some packages are used: Longtable, caption
+# When writing latex, some packages are used: Long table, caption
 
-def result_fetcher_and_sorter(config):
+def fetch_data(config):
     pull_requests_and_issues = {}
     for repository in config['repositories']:
         page = 1
@@ -18,51 +18,58 @@ def result_fetcher_and_sorter(config):
         current_rep_issues = {}
         print(f"Fetching from: {repository}")
         while count == config['per_page']:
-            print(f"Received {len(response.json())} issues")
-            for output in response.json():
-                # Checks for a valid response from the Github API.
-                if response.ok:
-                    sort_data(config, output, current_rep_issues, current_rep_pull_requests, repository)
-                else:
-                    print("Error receiving content from GitHub")
-                    print(response.json())
-                    break
-            page += 1
-            response = requester_functions(config, repository, page)
-            count = len(response.json())
+            print(f"    Received {len(response.json())} issues and pull requests")
+            if response.ok:
+                for output in response.json():
+                    # Checks for a valid response from the Github API.
+
+                    if not output.get("pull_request"):
+                        current_rep_issues[output['number']] = output
+                    else:
+                        current_rep_pull_requests[output['number']] = output
+                page += 1
+                response = requester_functions(config, repository, page)
+                count = len(response.json())
+            else:
+                print("Error receiving content from GitHub")
+                print(response.json())
+                break
 
         pull_requests_and_issues[repository] = {"issues": current_rep_issues, "pr": current_rep_pull_requests}
     return pull_requests_and_issues
 
 
-def sort_data(config, output, current_rep_issues, current_rep_pull_requests, repository):
-    if config['state'] == "closed":
-        if date_time_check(output['closed_at'], config):
-            if "Revert" not in output['title'] or "Merge" not in output['title']:
-                if len(config['labels']) > 0:
-                    contains_correct_labels(config, output, current_rep_issues,
-                                            current_rep_pull_requests)
-                else:
-                    update_pr_or_issue(output, current_rep_issues, current_rep_pull_requests)
-    if config['state'] != "closed":
-        if date_time_check(output['created_at'], config):
-            if len(config['labels']) > 0:
-                contains_correct_labels(config, output, current_rep_issues, current_rep_pull_requests)
-            else:
-                update_pr_or_issue(output, current_rep_issues, current_rep_pull_requests)
+def sort_data(config, pullrequests_and_issues):
+    temp_pull_requests_and_issues = {}
+    for repository in pullrequests_and_issues.items():
+        pull_requests = {}
+        issues = {}
+        for pr in repository[1]['pr'].items():
+            update_pr(pr, pull_requests, config)
+        for issue in repository[1]['issues'].items():
+            update_issue(issue, issues, config)
 
-    for pull_request in current_rep_pull_requests.items():
-        references = re.findall(r"/\d+|\.\d+", pull_request[1]['title'])
-        references.extend(re.findall(r"aau-giraf/\w+#\d+|#\d+", pull_request[1]['body']))
-        # Ensuring each reference is unique
-        pull_request[1]['references'] = unique_list_function(references, repository)
+        temp_pull_requests_and_issues[repository[0]] = {"issues": issues, "pr": pull_requests}
+        # Checks for references to issues, therefore this needs to be run after the two loops above
+        for pull_request in pull_requests.items():
+            references = re.findall(r"/\d+|\.\d+", pull_request[1]['title'])
+            references.extend(re.findall(r"aau-giraf/\w+#\d+|#\d+", pull_request[1]['body']))
+            # Ensuring each reference is unique
+            pull_request[1]['references'] = unique_list_function(references, repository[0])
+
+        temp_pull_requests_and_issues[repository[0]] = {"issues": issues, "pr": pull_requests}
+
+    return temp_pull_requests_and_issues
 
 
-def contains_correct_labels(config, output, current_rep_issues, current_rep_pull_requests):
-    for label in config['labels']:
-        for output_label in output['labels']:
-            if label in output_label['name']:
-                update_pr_or_issue(output, current_rep_issues, current_rep_pull_requests)
+def contains_correct_labels(config, input_item):
+    if len(config['required_labels']) > 0:
+        for label in config['required_labels']:
+            for output_label in input_item[1]['labels']:
+                if label in output_label['name']:
+                    return True
+        return False
+    return True
 
 
 def requester_functions(config, repository, page):
@@ -101,26 +108,50 @@ def solved_by_finder(pr_and_issues):
     for repository in pr_and_issues.items():
         for pr in repository[1]['pr'].items():
             for ref in pr[1]['references'].items():
-                if int(ref[0]) in pr_and_issues[ref[1]]['issues']:
-                    pr_and_issues[ref[1]]['issues'][int(ref[0])]['solved_by'][pr[0]] = repository[0]
+                repository_name = ref[1]
+                item_id = int(ref[0])
+                if item_id in pr_and_issues[repository_name]['issues']:
+                    pr_and_issues[repository_name]['issues'][item_id]['solved_by'][pr[0]] = repository[0]
 
 
-def update_pr_or_issue(output, issues, pull_requests):
+def update_pr(pr, pull_requests, config):
+    if config['state'] == "closed":
+        if date_time_check(pr[1]['closed_at'], config):
+            if "Revert" not in pr[1]['title'] or "Merge" not in pr[1]['title']:
+                write_pr(pr, pull_requests, config)
+    else:
+        if date_time_check(pr['created_at'], config):
+            write_pr(pr, pull_requests, config)
+
+
+def write_pr(pr, pull_requests, config):
+        if pr[0] not in pull_requests:
+            pull_requests[pr[0]] = {'title': pr[1]['title'],
+                                    'body': pr[1]['body']}
+
+
+def update_issue(issue, issues, config):
     # Checks whether it is a pull request
-    if not output.get('pull_request'):
-        if output['number'] not in issues:
-            labels = []
-            if len(output['type_labels']) > 0:
-                for label in output['labels']:
-                    if label in output['type_labels']:
-                        labels.append(label['name'])
-            issues[output['number']] = {'title': output['title'], 'body': output['body'],
-                                        "labels": labels, "solved_by": {}}
+    if config['state'] == "closed":
+        if "Revert" not in issue[1]['title'] or "Merge" not in issue[1]['title']:
+            if date_time_check(issue[1]['closed_at'], config):
+                write_issue(issue, issues, config)
 
-    if output.get('pull_request'):
-        if output['number'] not in pull_requests:
-            pull_requests[output['number']] = {'title': output['title'],
-                                               'body': output['body']}
+    else:
+        if date_time_check(issue['created_at'], config):
+            write_issue(issue, issues, config)
+
+
+def write_issue(issue, issues, config):
+    if issue[0] not in issues:
+        labels = []
+        if contains_correct_labels(config, issue):
+            for label in issue[1]['labels']:
+                if label['name'] in config['type_labels']:
+                    labels.append(label['name'])
+
+            issues[issue[0]] = {'title': issue[1]['title'], 'body': issue[1]['body'],
+                                "labels": labels, "solved_by": {}}
 
 
 def date_time_check(closed_at, config):
@@ -164,7 +195,7 @@ def markdown_format(output_string, repository):
     # If there are issues, write this:
     if len(issues.items()) > 0:
         output_string += "## Issues  \n"
-        output_string += "| Issue NR | Title | Labels | Solved By | \n" \
+        output_string += "| Issue NR | Title | Type | Solved By | \n" \
                          "|:---------:|:-----|:-------------|:-------------| \n"
         for issue in issues.items():
             pretty_references = ""
@@ -229,8 +260,10 @@ def config_reader():
 def main():
     config = config_reader()
     print("Fetching data...")
-    pull_requests_and_issues = result_fetcher_and_sorter(config)
+    pull_requests_and_issues = fetch_data(config)
     print("Sorting outputs")
+    pull_requests_and_issues = sort_data(config, pull_requests_and_issues)
+
     solved_by_finder(pull_requests_and_issues)
     print("Generating file")
     output_generator(pull_requests_and_issues, config)
