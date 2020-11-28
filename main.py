@@ -17,12 +17,11 @@ def fetch_data(config):
         current_rep_pull_requests = {}
         current_rep_issues = {}
         print(f"Fetching from: {repository}")
-        while count == config['per_page']:
+        while count != 0:
             print(f"    Received {len(response.json())} issues and pull requests")
+            # Checks for a valid response from the Github API.
             if response.ok:
                 for output in response.json():
-                    # Checks for a valid response from the Github API.
-
                     if not output.get("pull_request"):
                         current_rep_issues[output['number']] = output
                     else:
@@ -120,41 +119,45 @@ def solved_by_finder(pr_and_issues):
 def update_pr(pr, pull_requests, config):
     if config['state'] == "closed":
         if date_time_check(pr[1]['closed_at'], config):
-            if len(config['blacklist_words_pr']) > 0:
-                if not any(word in pr[1]['title'] for word in config['blacklist_words_pr']):
-                    write_pr(pr, pull_requests, config)
-            else:
-                write_pr(pr, pull_requests, config)
+            if not pr_title_contains_blacklisted_word(pr, config):
+                write_pr(pr, pull_requests)
     else:
         if date_time_check(pr['created_at'], config):
-            if len(config['blacklist_words_pr']) > 0:
-                if not any(word in pr[1]['title'] for word in config['blacklist_words_pr']):
-                    write_pr(pr, pull_requests, config)
-            else:
-                write_pr(pr, pull_requests, config)
+            if not pr_title_contains_blacklisted_word(pr, config):
+                write_pr(pr, pull_requests)
 
 
-def write_pr(pr, pull_requests, config):
+def write_pr(pr, pull_requests):
     if pr[0] not in pull_requests:
         pull_requests[pr[0]] = {'title': pr[1]['title'],
                                 'body': pr[1]['body']}
+
+
+def pr_title_contains_blacklisted_word(item, config):
+    if len(config['blacklist_words_pr']) > 0:
+        if not any(word in item[1]['title'] for word in config['blacklist_words_pr']):
+            return False
+        return True
+    return False
+
+
+def issue_title_contains_blacklisted_word(item, config):
+    if len(config['blacklist_words_issue']) > 0:
+        if not any(word in item[1]['title'] for word in config['blacklist_words_issue']):
+            return False
+        return True
+    return False
 
 
 def update_issue(issue, issues, config):
     # Checks whether it is a pull request
     if config['state'] == "closed":
         if date_time_check(issue[1]['closed_at'], config):
-            if len(config['blacklist_words_issue']) > 0:
-                if not any(word in issue[1]['title'] for word in config['blacklist_words_issue']):
-                    write_issue(issue, issues, config)
-            else:
+            if not issue_title_contains_blacklisted_word(issue, config):
                 write_issue(issue, issues, config)
     else:
         if date_time_check(issue['created_at'], config):
-            if len(config['blacklist_words_issue']) > 0:
-                if not any(word in issue[1]['title'] for word in config['blacklist_words_issue']):
-                    write_issue(issue, issues, config)
-            else:
+            if not issue_title_contains_blacklisted_word(issue, config):
                 write_issue(issue, issues, config)
 
 
