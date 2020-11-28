@@ -125,9 +125,9 @@ def update_pr(pr, pull_requests, config):
 
 
 def write_pr(pr, pull_requests, config):
-        if pr[0] not in pull_requests:
-            pull_requests[pr[0]] = {'title': pr[1]['title'],
-                                    'body': pr[1]['body']}
+    if pr[0] not in pull_requests:
+        pull_requests[pr[0]] = {'title': pr[1]['title'],
+                                'body': pr[1]['body']}
 
 
 def update_issue(issue, issues, config):
