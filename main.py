@@ -49,17 +49,20 @@ def sort_data(config, pullrequests_and_issues):
         for issue in repository[1]['issues'].items():
             update_issue(issue, issues, config)
 
-        temp_pull_requests_and_issues[repository[0]] = {"issues": issues, "pr": pull_requests}
-        # Checks for references to issues, therefore this needs to be run after the two loops above
         for pull_request in pull_requests.items():
-            references = re.findall(r"/\d+|\.\d+", pull_request[1]['title'])
-            references.extend(re.findall(r"aau-giraf/\w+#\d+|#\d+", pull_request[1]['body']))
-            # Ensuring each reference is unique
-            pull_request[1]['references'] = unique_list_function(references, repository[0])
+            pr_reference_to_issues(pull_request, repository[0])
 
         temp_pull_requests_and_issues[repository[0]] = {"issues": issues, "pr": pull_requests}
 
     return temp_pull_requests_and_issues
+
+
+def pr_reference_to_issues(pull_request, repository):
+    # Checks for references to issues, therefore this needs to be run after the two loops above
+    references = re.findall(r"/\d+|\.\d+", pull_request[1]['title'])
+    references.extend(re.findall(r"aau-giraf/\w+#\d+|#\d+", pull_request[1]['body']))
+    # Ensuring each reference is unique
+    pull_request[1]['references'] = unique_list_function(references, repository)
 
 
 def contains_correct_labels(config, input_item):
@@ -117,11 +120,18 @@ def solved_by_finder(pr_and_issues):
 def update_pr(pr, pull_requests, config):
     if config['state'] == "closed":
         if date_time_check(pr[1]['closed_at'], config):
-            if "Revert" not in pr[1]['title'] or "Merge" not in pr[1]['title']:
+            if len(config['blacklist_words_pr']) > 0:
+                if not any(word in pr[1]['title'] for word in config['blacklist_words_pr']):
+                    write_pr(pr, pull_requests, config)
+            else:
                 write_pr(pr, pull_requests, config)
     else:
         if date_time_check(pr['created_at'], config):
-            write_pr(pr, pull_requests, config)
+            if len(config['blacklist_words_pr']) > 0:
+                if not any(word in pr[1]['title'] for word in config['blacklist_words_pr']):
+                    write_pr(pr, pull_requests, config)
+            else:
+                write_pr(pr, pull_requests, config)
 
 
 def write_pr(pr, pull_requests, config):
@@ -133,13 +143,19 @@ def write_pr(pr, pull_requests, config):
 def update_issue(issue, issues, config):
     # Checks whether it is a pull request
     if config['state'] == "closed":
-        if "Revert" not in issue[1]['title'] or "Merge" not in issue[1]['title']:
-            if date_time_check(issue[1]['closed_at'], config):
+        if date_time_check(issue[1]['closed_at'], config):
+            if len(config['blacklist_words_issue']) > 0:
+                if not any(word in issue[1]['title'] for word in config['blacklist_words_issue']):
+                    write_issue(issue, issues, config)
+            else:
                 write_issue(issue, issues, config)
-
     else:
         if date_time_check(issue['created_at'], config):
-            write_issue(issue, issues, config)
+            if len(config['blacklist_words_issue']) > 0:
+                if not any(word in issue[1]['title'] for word in config['blacklist_words_issue']):
+                    write_issue(issue, issues, config)
+            else:
+                write_issue(issue, issues, config)
 
 
 def write_issue(issue, issues, config):
@@ -149,7 +165,6 @@ def write_issue(issue, issues, config):
             for label in issue[1]['labels']:
                 if label['name'] in config['type_labels']:
                     labels.append(label['name'])
-
             issues[issue[0]] = {'title': issue[1]['title'], 'body': issue[1]['body'],
                                 "labels": labels, "solved_by": {}}
 

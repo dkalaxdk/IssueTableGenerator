@@ -1,6 +1,11 @@
 {
   "token": "",
-  "repositories": ["weekplanner", "web-api", "api_client", "wiki"],
+  "repositories": [
+    "weekplanner",
+    "web-api",
+    "api_client",
+    "wiki"
+  ],
   "from_date": "2020-09-01",
   "to_date": "",
   "state": "closed",
@@ -8,5 +13,9 @@
   "per_page": "100",
   "required_labels": [],
   "type_labels": [],
+  "blacklist_words_issue": [
+  ],
+  "blacklist_words_pr": [
+  ],
   "milestones": []
 }
