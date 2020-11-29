@@ -11,11 +11,12 @@ import datetime as dt
 def fetch_data(config):
     pull_requests_and_issues = {}
     for repository in config['repositories']:
+        current_rep_pull_requests = {}
+        current_rep_issues = {}
+
         page = 1
         count = config['per_page']
         response = requester_functions(config, repository, page)
-        current_rep_pull_requests = {}
-        current_rep_issues = {}
         print(f"Fetching from: {repository}")
         while count != 0:
             print(f"    Received {len(response.json())} issues and pull requests")
@@ -38,6 +39,15 @@ def fetch_data(config):
     return pull_requests_and_issues
 
 
+def requester_functions(config, repository, page):
+    query = "?" + "state=" + config['state'] + f"&per_page={config['per_page']}&page={page}"
+    accept_header = 'application/vnd.github+json'
+    api_root = "https://api.github.com/"
+    headers = {'Authorization': 'token ' + config['token'], 'Accept': accept_header}
+    return requests.get(api_root + "repos/aau-giraf/" + repository + "/issues" + query,
+                        headers=headers)
+
+
 def sort_data(config, pullrequests_and_issues):
     temp_pull_requests_and_issues = {}
     for repository in pullrequests_and_issues.items():
@@ -45,16 +55,16 @@ def sort_data(config, pullrequests_and_issues):
         issues = {}
         for pr in repository[1]['pr'].items():
             update_pr(pr, pull_requests, config)
+            pr_reference_to_issues(pr, repository[0])
         for issue in repository[1]['issues'].items():
             update_issue(issue, issues, config)
-
-        for pull_request in pull_requests.items():
-            pr_reference_to_issues(pull_request, repository[0])
 
         temp_pull_requests_and_issues[repository[0]] = {"issues": issues, "pr": pull_requests}
 
     return temp_pull_requests_and_issues
 
+def pr_linked_to_issue():
+    return
 
 def pr_reference_to_issues(pull_request, repository):
     # Checks for references to issues, therefore this needs to be run after the two loops above
@@ -65,7 +75,7 @@ def pr_reference_to_issues(pull_request, repository):
 
 
 def contains_correct_labels(config, input_item):
-    if len(config['required_labels']) > 0:
+    if config['required_labels']:
         for label in config['required_labels']:
             for output_label in input_item[1]['labels']:
                 if label in output_label['name']:
@@ -74,20 +84,11 @@ def contains_correct_labels(config, input_item):
     return True
 
 
-def requester_functions(config, repository, page):
-    query = "?" + "state=" + config['state'] + f"&per_page={config['per_page']}&page={page}"
-    accept_header = 'application/vnd.github+json'
-    api_root = "https://api.github.com/"
-    headers = {'Authorization': 'token ' + config['token'], 'Accept': accept_header}
-    return requests.get(api_root + "repos/aau-giraf/" + repository + "/issues" + query,
-                        headers=headers)
-
-
 def unique_list_function(references, input_repository):
     unique_list = {}
     repository = input_repository
     for ref in references:
-        if len(ref) > 0:
+        if ref:
             clean_ref = clean_reference(ref, repository)
             if clean_ref[0] not in unique_list and '.' not in ref:
                 unique_list[clean_ref[0]] = repository
@@ -118,13 +119,13 @@ def solved_by_finder(pr_and_issues):
 
 def update_pr(pr, pull_requests, config):
     if config['state'] == "closed":
-        if date_time_check(pr[1]['closed_at'], config):
-            if not pr_title_contains_blacklisted_word(pr, config):
-                write_pr(pr, pull_requests)
+        if date_time_check(pr[1]['closed_at'], config) \
+                and not pr_title_contains_blacklisted_word(pr, config):
+            write_pr(pr, pull_requests)
     else:
-        if date_time_check(pr['created_at'], config):
-            if not pr_title_contains_blacklisted_word(pr, config):
-                write_pr(pr, pull_requests)
+        if date_time_check(pr[1]['created_at'], config) \
+                and not pr_title_contains_blacklisted_word(pr, config):
+            write_pr(pr, pull_requests)
 
 
 def write_pr(pr, pull_requests):
@@ -134,31 +135,37 @@ def write_pr(pr, pull_requests):
 
 
 def pr_title_contains_blacklisted_word(item, config):
-    if len(config['blacklist_words_pr']) > 0:
-        if not any(word in item[1]['title'] for word in config['blacklist_words_pr']):
-            return False
-        return True
+    if config['blacklist_words_pr']:
+        return not any(word in item[1]['title'] for word in config['blacklist_words_pr'])
     return False
 
 
 def issue_title_contains_blacklisted_word(item, config):
-    if len(config['blacklist_words_issue']) > 0:
-        if not any(word in item[1]['title'] for word in config['blacklist_words_issue']):
-            return False
-        return True
+    if config['blacklist_words_issue']:
+        return not any(word in item[1]['title'] for word in config['blacklist_words_issue'])
     return False
 
 
 def update_issue(issue, issues, config):
-    # Checks whether it is a pull request
     if config['state'] == "closed":
-        if date_time_check(issue[1]['closed_at'], config):
-            if not issue_title_contains_blacklisted_word(issue, config):
-                write_issue(issue, issues, config)
+        if date_time_check(issue[1]['closed_at'], config) \
+                and not issue_title_contains_blacklisted_word(issue, config) \
+                and issue_in_milestone(issue, config):
+            write_issue(issue, issues, config)
     else:
-        if date_time_check(issue['created_at'], config):
-            if not issue_title_contains_blacklisted_word(issue, config):
-                write_issue(issue, issues, config)
+        if date_time_check(issue[1]['created_at'], config) \
+                and not issue_title_contains_blacklisted_word(issue, config) \
+                and issue_in_milestone(issue, config):
+            write_issue(issue, issues, config)
+
+
+def issue_in_milestone(issue, config):
+    if config['milestone']:
+        if issue[1].get('milestone'):
+            return issue[1]['milestone']['title'] == config['milestone']
+        else:
+            return False
+    return True
 
 
 def write_issue(issue, issues, config):
@@ -176,14 +183,14 @@ def date_time_check(closed_at, config):
     format_string = "%Y-%m-%dT%H:%M:%SZ"
     input_format = "%Y-%m-%d"
     closed_at_converted = dt.datetime.strptime(closed_at, format_string)
-    if len(config['from_date']) > 0 and len(config['to_date']) > 0:
+    if config['from_date'] and config['to_date']:
         from_date = dt.datetime.strptime(config['from_date'], input_format)
         to_date = dt.datetime.strptime(config['to_date'], input_format)
         return from_date < closed_at_converted < to_date
-    if len(config['from_date']) > 0:
+    if config['from_date']:
         return closed_at_converted > dt.datetime.strptime(
             config['from_date'], input_format)
-    if len(config['to_date']) > 0:
+    if config['to_date']:
         return closed_at_converted < dt.datetime.strptime(
             config['to_date'], input_format)
     else:
@@ -211,7 +218,7 @@ def markdown_format(output_string, repository):
     issues = repository[1]['issues']
     pull_requests = repository[1]['pr']
     # If there are issues, write this:
-    if len(issues.items()) > 0:
+    if issues.items():
         output_string += "## Issues  \n"
         output_string += "| Issue NR | Title | Type | Solved By | \n" \
                          "|:---------:|:-----|:-------------|:-------------| \n"
@@ -225,7 +232,7 @@ def markdown_format(output_string, repository):
                              f"| {' , '.join(issue[1]['labels'])} " \
                              f"| {pretty_references} | \n"
     # If there are pull requests, write this:
-    if len(pull_requests.items()) > 0:
+    if pull_requests.items():
         output_string += "## Pull requests   \n"
         output_string += "| Pull NR | Title | References | \n|:---------:|:-----|:-------------| \n"
 
@@ -247,25 +254,25 @@ def latex_format(output_string, repository):
     issues = repository[1]['issues']
     pull_requests = repository[1]['pr']
     # If there are issues, write this:
-    if len(issues.items()) > 0:
+    if issues.items():
         output_string += "\\section{Issues}  \n"
         output_string += '\\begin{longtable}[H]{|l|p{6.3cm}|l|l|} \n' \
                          '\\hline \\endfirsthead ' \
                          '\\textbf{Issues NR} & \\textbf{Title} & \\textbf{Status} & \\textbf{Type} \\\\ ' \
                          '\\hline\n '
-        for x in issues.items():
-            output_string += f"{repository[0]}\\#{x[0]} & {x[1]['title']} & &  \\\\ \\hline \n"
+        for issues in issues.items():
+            output_string += f"{repository[0]}\\#{issues[0]} & {issues[1]['title']} & &  \\\\ \\hline \n"
         output_string += "\\caption{Text} \n\\label{tab:my_tab} \n\\end{longtable} \n \n"
     # If there are pull requests, write this:
-    if len(pull_requests.items()) > 0:
+    if pull_requests.items():
         output_string += "\\section{Pull requests}  \n"
         output_string += '\\begin{longtable}[H]{|l|p{6.3cm}|l|l|} \n' \
                          '\\hline \\endfirsthead ' \
                          '\\textbf{Issues NR} & \\textbf{Title} & \\textbf{Status} & \\textbf{Type} \\\\ ' \
                          '\\hline\n'
 
-        for x in pull_requests.items():
-            output_string += f"{repository[0]}\\#{x[0]} & {x[1]['title']} & &  \\\\ \\hline \n"
+        for issues in pull_requests.items():
+            output_string += f"{repository[0]}\\#{issues[0]} & {issues[1]['title']} & &  \\\\ \\hline \n"
     return output_string
 
 
