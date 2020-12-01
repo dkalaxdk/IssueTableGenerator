@@ -3,6 +3,7 @@ import json
 import re
 import codecs
 import datetime as dt
+from formatter import MarkdownFormatter, LatexFormatter
 
 
 # When writing markdown, no packages are used, uses Github Flavoured Markdown.
@@ -140,83 +141,85 @@ def date_time_check(closed_at, config):
         return True
 
 
+# If the language is not defined correctly this will not work correctly
+# But it should not be the responsibility of this class to validate it
 def output_generator(pull_requests_and_issues, config):
-    output_string = ""
+    # This can be generalised to support any format
+    # and remove the sequence of 'if' statments
     if config['language'] == "markdown":
-        f = codecs.open("output.md", encoding='utf-8', mode='w+')
-        for repository in pull_requests_and_issues.items():
-            output_string = markdown_format(output_string, repository)
-        f.write(output_string)
-        f.close()
+        formatter = MarkdownFormatter()
     if config['language'] == "latex":
-        f = codecs.open("output.tex", encoding='utf-8', mode='w+')
+        formatter = LatexFormatter()
+
+    output_string = ""
+    f = codecs.open("output.md", encoding='utf-8', mode='w+')
         for repository in pull_requests_and_issues.items():
-            output_string = latex_format(output_string, repository)
+            output_string = formatter.format(output_string, repository)
         f.write(output_string)
         f.close()
 
 
-def markdown_format(output_string, repository):
-    output_string += f"# {repository[0]}  \n"
-    issues = repository[1]['issues']
-    pull_requests = repository[1]['pr']
+#def markdown_format(output_string, repository):
+#    output_string += f"# {repository[0]}  \n"
+#    issues = repository[1]['issues']
+#    pull_requests = repository[1]['pr']
+#    # If there are issues, write this:
+#    if len(issues.items()) > 0:
+#        output_string += "## Issues  \n"
+#        output_string += "| Issue NR | Title | Labels | Solved By | \n" \
+#                         "|:---------:|:-----|:-------------|:-------------| \n"
+#        for issue in issues.items():
+#            pretty_references = ""
+#            for reference in issue[1]['solved_by'].items():
+#                pretty_references += f"[{reference[0]}](https://github.com/aau-giraf/" \
+#                                     f"{reference[1]}/issues/{reference[0]}) "
+#            output_string += f"|[{issue[0]}](https://github.com/aau-giraf/{repository[0]}/issues/{issue[0]}) " \
+#                             f"| {issue[1]['title']} " \
+#                             f"| {' , '.join(issue[1]['labels'])} " \
+#                             f"| {pretty_references} | \n"
+#    # If there are pull requests, write this:
+#    if len(pull_requests.items()) > 0:
+#        output_string += "## Pull requests   \n"
+#        output_string += "| Pull NR | Title | References | \n|:---------:|:-----|:-------------| \n"
+
+#        for pull_request in pull_requests.items():
+#            pretty_references = ""
+#            for reference in pull_request[1]['references'].items():
+#                pretty_references += f"[{reference[0]}](https://github.com/aau-giraf/" \
+#                                     f"{reference[1]}/issues/{reference[0]}) "
+
+#            output_string += f"| [{pull_request[0]}](https://github.com/aau-giraf/" \
+#                             f"{repository[0]}/issues/{pull_request[0]}) " \
+#                             f"| {pull_request[1]['title']} " \
+#                             f"| {pretty_references} | \n"
+#    return output_string
+
+
+#def latex_format(output_string, repository):
+#    output_string += f"# {repository[0]}  \n"
+#    issues = repository[1]['issues']
+#    pull_requests = repository[1]['pr']
     # If there are issues, write this:
-    if len(issues.items()) > 0:
-        output_string += "## Issues  \n"
-        output_string += "| Issue NR | Title | Labels | Solved By | \n" \
-                         "|:---------:|:-----|:-------------|:-------------| \n"
-        for issue in issues.items():
-            pretty_references = ""
-            for reference in issue[1]['solved_by'].items():
-                pretty_references += f"[{reference[0]}](https://github.com/aau-giraf/" \
-                                     f"{reference[1]}/issues/{reference[0]}) "
-            output_string += f"|[{issue[0]}](https://github.com/aau-giraf/{repository[0]}/issues/{issue[0]}) " \
-                             f"| {issue[1]['title']} " \
-                             f"| {' , '.join(issue[1]['labels'])} " \
-                             f"| {pretty_references} | \n"
+#    if len(issues.items()) > 0:
+#        output_string += "\\section{Issues}  \n"
+#        output_string += '\\begin{longtable}[H]{|l|p{6.3cm}|l|l|} \n' \
+#                         '\\hline \\endfirsthead ' \
+#                         '\\textbf{Issues NR} & \\textbf{Title} & \\textbf{Status} & \\textbf{Type} \\\\ ' \
+#                         '\\hline\n '
+#        for x in issues.items():
+#            output_string += f"{repository[0]}\\#{x[0]} & {x[1]['title']} & &  \\\\ \\hline \n"
+#        output_string += "\\caption{Text} \n\\label{tab:my_tab} \n\\end{longtable} \n \n"
     # If there are pull requests, write this:
-    if len(pull_requests.items()) > 0:
-        output_string += "## Pull requests   \n"
-        output_string += "| Pull NR | Title | References | \n|:---------:|:-----|:-------------| \n"
+#    if len(pull_requests.items()) > 0:
+#        output_string += "\\section{Pull requests}  \n"
+#        output_string += '\\begin{longtable}[H]{|l|p{6.3cm}|l|l|} \n' \
+#                         '\\hline \\endfirsthead ' \
+#                         '\\textbf{Issues NR} & \\textbf{Title} & \\textbf{Status} & \\textbf{Type} \\\\ ' \
+#                         '\\hline\n'
 
-        for pull_request in pull_requests.items():
-            pretty_references = ""
-            for reference in pull_request[1]['references'].items():
-                pretty_references += f"[{reference[0]}](https://github.com/aau-giraf/" \
-                                     f"{reference[1]}/issues/{reference[0]}) "
-
-            output_string += f"| [{pull_request[0]}](https://github.com/aau-giraf/" \
-                             f"{repository[0]}/issues/{pull_request[0]}) " \
-                             f"| {pull_request[1]['title']} " \
-                             f"| {pretty_references} | \n"
-    return output_string
-
-
-def latex_format(output_string, repository):
-    output_string += f"# {repository[0]}  \n"
-    issues = repository[1]['issues']
-    pull_requests = repository[1]['pr']
-    # If there are issues, write this:
-    if len(issues.items()) > 0:
-        output_string += "\\section{Issues}  \n"
-        output_string += '\\begin{longtable}[H]{|l|p{6.3cm}|l|l|} \n' \
-                         '\\hline \\endfirsthead ' \
-                         '\\textbf{Issues NR} & \\textbf{Title} & \\textbf{Status} & \\textbf{Type} \\\\ ' \
-                         '\\hline\n '
-        for x in issues.items():
-            output_string += f"{repository[0]}\\#{x[0]} & {x[1]['title']} & &  \\\\ \\hline \n"
-        output_string += "\\caption{Text} \n\\label{tab:my_tab} \n\\end{longtable} \n \n"
-    # If there are pull requests, write this:
-    if len(pull_requests.items()) > 0:
-        output_string += "\\section{Pull requests}  \n"
-        output_string += '\\begin{longtable}[H]{|l|p{6.3cm}|l|l|} \n' \
-                         '\\hline \\endfirsthead ' \
-                         '\\textbf{Issues NR} & \\textbf{Title} & \\textbf{Status} & \\textbf{Type} \\\\ ' \
-                         '\\hline\n'
-
-        for x in pull_requests.items():
-            output_string += f"{repository[0]}\\#{x[0]} & {x[1]['title']} & &  \\\\ \\hline \n"
-    return output_string
+#        for x in pull_requests.items():
+#            output_string += f"{repository[0]}\\#{x[0]} & {x[1]['title']} & &  \\\\ \\hline \n"
+#    return output_string
 
 
 def config_reader():
