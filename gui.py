@@ -36,7 +36,20 @@ layout = [
          ]
 
 #STEP 2 - create the window
-window = sg.Window('My new window', layout, grab_anywhere=True)
+window = sg.Window('Release Designer', layout, grab_anywhere=True, finalize=True)
+
+# Read initial values if there already is a ConfigFile
+try:
+  initial_values = {}
+  # Read the initial config values, and format lists correctly
+  with open("configFile.json", "r") as json_file:
+    initial_values = gf.convert_lists_to_csv(json.load(json_file))
+
+  # Update the actual GUI
+  for key in initial_values:
+    window[key].update(initial_values[key])
+except:
+  print('ConfigFile.json does not exist. Could not read initial values')
 
 # STEP3 - the event loop
 while True:
