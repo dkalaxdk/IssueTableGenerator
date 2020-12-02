@@ -132,7 +132,7 @@ def pr_checklist(config, pr):
 def write_pr(pr, pull_requests):
     if pr[0] not in pull_requests:
         pull_requests[pr[0]] = {'title': pr[1]['title'],
-                                'body': pr[1]['body']}
+                                'body': pr[1]['body'], 'references': {}}
 
 
 def pr_title_contains_blacklisted_word(item, config):
