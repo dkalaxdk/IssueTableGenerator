@@ -215,10 +215,10 @@ def output_generator(pull_requests_and_issues, config):
 
     output_string = ""
     f = codecs.open("output.md", encoding='utf-8', mode='w+')
-        for repository in pull_requests_and_issues.items():
-            output_string = formatter.format(output_string, repository)
-        f.write(output_string)
-        f.close()
+    for repository in pull_requests_and_issues.items():
+        output_string = formatter.format(output_string, repository)
+    f.write(output_string)
+    f.close()
 
 def config_reader():
     with open("configFile.json", "r") as json_file:
