@@ -63,8 +63,6 @@ def sort_data(config, pullrequests_and_issues):
 
     return temp_pull_requests_and_issues
 
-def pr_linked_to_issue():
-    return
 
 def pr_reference_to_issues(pull_request, repository):
     # Checks for references to issues, therefore this needs to be run after the two loops above
@@ -118,14 +116,17 @@ def solved_by_finder(pr_and_issues):
 
 
 def update_pr(pr, pull_requests, config):
+    if pr_checklist(config, pr):
+        write_pr(pr, pull_requests)
+
+
+def pr_checklist(config, pr):
     if config['state'] == "closed":
-        if date_time_check(pr[1]['closed_at'], config) \
-                and not pr_title_contains_blacklisted_word(pr, config):
-            write_pr(pr, pull_requests)
+        return date_time_check(pr[1]['closed_at'], config) \
+               and not pr_title_contains_blacklisted_word(pr, config)
     else:
-        if date_time_check(pr[1]['created_at'], config) \
-                and not pr_title_contains_blacklisted_word(pr, config):
-            write_pr(pr, pull_requests)
+        return date_time_check(pr[1]['created_at'], config) \
+               and not pr_title_contains_blacklisted_word(pr, config)
 
 
 def write_pr(pr, pull_requests):
@@ -147,16 +148,20 @@ def issue_title_contains_blacklisted_word(item, config):
 
 
 def update_issue(issue, issues, config):
+    if issue_checklist(config, issue):
+        write_issue(issue, issues, config)
+
+
+def issue_checklist(config, issue):
     if config['state'] == "closed":
-        if date_time_check(issue[1]['closed_at'], config) \
-                and not issue_title_contains_blacklisted_word(issue, config) \
-                and issue_in_milestone(issue, config):
-            write_issue(issue, issues, config)
+        return date_time_check(issue[1]['closed_at'], config) \
+               and not issue_title_contains_blacklisted_word(issue, config) \
+               and issue_in_milestone(issue, config)
+
     else:
-        if date_time_check(issue[1]['created_at'], config) \
-                and not issue_title_contains_blacklisted_word(issue, config) \
-                and issue_in_milestone(issue, config):
-            write_issue(issue, issues, config)
+        return date_time_check(issue[1]['created_at'], config) \
+               and not issue_title_contains_blacklisted_word(issue, config) \
+               and issue_in_milestone(issue, config)
 
 
 def issue_in_milestone(issue, config):
