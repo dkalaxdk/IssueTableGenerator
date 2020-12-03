@@ -1,5 +1,8 @@
 {
   "token": "",
+  "username": "",
+  "password": "",
+  "rep_owner": "aau-giraf",
   "repositories": [
     "weekplanner",
     "web-api",
@@ -11,11 +14,18 @@
   "state": "closed",
   "language": "markdown",
   "per_page": "100",
-  "required_labels": [],
-  "type_labels": [],
+  "required_labels": [
+    ""
+  ],
+  "type_labels": [
+    ""
+  ],
   "blacklist_words_issue": [
+    ""
   ],
   "blacklist_words_pr": [
+    ""
   ],
-  "milestone": ""
+  "milestone": "",
+  "issues_or_pr": ""
 }
