@@ -4,9 +4,6 @@ from abc import ABC, abstractmethod
 class AbstractFormatter(ABC):
  
     def __init__(self):
-        self.output_string = output_string
-        self.repository = repository
-        # 
         super().__init__()
     
     @abstractmethod
