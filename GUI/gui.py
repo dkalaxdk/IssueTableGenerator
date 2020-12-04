@@ -1,20 +1,26 @@
 import PySimpleGUI as sg
 import json
-import gui_functions as gf
+from GUI import gui_functions as gf
 import main
 
 
 # on submit: First read all the stuff from the inputs, then validate it, then write the whole thing to a json config file
-def on_submit(data):
+def store_data(data):
+    with open('../ConfigFile.json', 'w') as outfile:
+        json.dump(data, outfile)
+
+
+def data_converter(data):
     data = gf.convert_csv_dict_items_to_lists(data, [
         'repositories',
         'required_labels',
         'type_labels',
         'blacklist_words_issue',
-        'blacklist_words_pr'
+        'blacklist_words_pr',
+        'headers',
+        'header_content'
     ])
-    with open('ConfigFile.json', 'w') as outfile:
-        json.dump(data, outfile)
+    return data
 
 
 status = ""
@@ -32,14 +38,16 @@ layout = [
     [sg.Text('Repositories ( separated by commas)'), sg.InputText(key='repositories')],
     [sg.Text('From date ( year-month-day )'), sg.InputText(key='from_date')],
     [sg.Text('To date ( year-month-day )'), sg.InputText(key='to_date')],
-    [sg.Text('State (open,closed,all)'), sg.InputText(key='state')],
-    [sg.Text('Language (markdown or latex)'), sg.InputText(key='language')],
+    [sg.Text('State (open,closed,all)'), sg.Combo(['open', 'closed', 'all'], default_value='all', key='state')],
+    [sg.Text('Language'), sg.Combo(['markdown', 'latex'], default_value='markdown', key='language')],
     [sg.Text('Results per page'), sg.InputText(key='per_page')],
     [sg.Text('Required labels'), sg.InputText(key='required_labels')],
     [sg.Text('Type labels'), sg.InputText(key='type_labels')],
     [sg.Text('Word blacklist (issues)'), sg.InputText(key='blacklist_words_issue')],
     [sg.Text('Word blacklist (pull requests)'), sg.InputText(key='blacklist_words_pr')],
     [sg.Text('Milestone'), sg.InputText(key='milestone')],
+    [sg.Text('Headers'), sg.InputText(key='headers')],
+    [sg.Text('Header content'), sg.InputText(key='header_content')],
     [sg.Text('Issue/Pr filter'),
      sg.Combo(['Pull requests', 'Issues', 'Both'], key="issues_or_pr", default_value="Both")],
     [sg.Button('Ok'), sg.Button('Execute'), sg.Button('Exit')]
@@ -52,7 +60,7 @@ window = sg.Window('Release Designer', layout, grab_anywhere=True, finalize=True
 try:
     initial_values = {}
     # Read the initial config values, and format lists correctly
-    with open("configFile.json", "r") as json_file:
+    with open("ConfigFile.json", "r") as json_file:
         initial_values = gf.convert_lists_to_csv(json.load(json_file))
 
     # Update the actual GUI
@@ -70,11 +78,11 @@ while True:
         break
     if event == 'Ok':
         print('Creating configuration file')
-        on_submit(values)
+        store_data(data_converter(values))
         break
     if event == 'Execute':
         print('Creating configuration file')
-        on_submit(values)
-        if main.main():
+        if main.main(data_converter(values)):
+            store_data(values)
             print('Succes')
 window.close()

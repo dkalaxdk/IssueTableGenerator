@@ -1,4 +1,22 @@
 import datetime as dt
+from helpers import item_updater as iu
+from helpers import reference_manager as rm
+
+
+def filter_data(config, pull_requests_and_issues):
+    temp_pull_requests_and_issues = {}
+    for repository in pull_requests_and_issues.items():
+        pull_requests = {}
+        issues = {}
+        for pr in repository[1]['pr'].items():
+            iu.update_pr(pr, pull_requests, config)
+            rm.pr_reference_to_issues(pr, repository[0])
+        for issue in repository[1]['issues'].items():
+            iu.update_issue(issue, issues, config)
+
+        temp_pull_requests_and_issues[repository[0]] = {"issues": issues, "pr": pull_requests}
+
+    return temp_pull_requests_and_issues
 
 
 def issue_checklist(config, issue):
@@ -61,6 +79,7 @@ def issue_in_milestone(issue, config):
         else:
             return False
     return True
+
 
 def contains_correct_labels(config, input_item):
     if config['required_labels']:

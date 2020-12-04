@@ -1,4 +1,4 @@
-from gui_functions import *
+from GUI.gui_functions import *
 
 def test_validate_input():
   assert validate_input([])
