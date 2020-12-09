@@ -3,7 +3,7 @@ def return_key(input_item, key):
         if not input_item.get("pull_request"):
             return input_item['solved_by']
         else:
-            return "solved_by not supported on pull issues"
+            return "solved_by not supported on issues"
     if key == "references":
         if input_item.get("pull_request"):
             return input_item['references']
