@@ -14,14 +14,15 @@ def output_generator(pull_requests_and_issues, config):
     # This can be generalised to support any format
     # and remove the sequence of 'if' statments
     if config['language'] == "markdown":
+        f = codecs.open("output.md", encoding='utf-8', mode='w+')
         formatter = MarkdownFormatter()
-    if config['language'] == "latex":
+    else:
+        f = codecs.open("output.tex", encoding='utf-8', mode='w+')
         formatter = LatexFormatter()
 
     output_string = ""
-    f = codecs.open("output.md", encoding='utf-8', mode='w+')
     for repository in pull_requests_and_issues.items():
-        output_string = formatter.format(output_string, repository)
+        output_string = formatter.format(output_string, repository, config)
     f.write(output_string)
     f.close()
 

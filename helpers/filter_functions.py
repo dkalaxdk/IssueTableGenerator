@@ -44,13 +44,13 @@ def pr_checklist(config, pr):
 
 def pr_title_contains_blacklisted_word(item, config):
     if config['blacklist_words_pr']:
-        return not any(word in item[1]['title'] for word in config['blacklist_words_pr'])
+        return any(word in item[1]['title'] for word in config['blacklist_words_pr'])
     return False
 
 
 def issue_title_contains_blacklisted_word(item, config):
     if config['blacklist_words_issue']:
-        return not any(word in item[1]['title'] for word in config['blacklist_words_issue'])
+        return any(word in item[1]['title'] for word in config['blacklist_words_issue'])
     return False
 
 

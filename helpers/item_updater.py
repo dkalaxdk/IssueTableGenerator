@@ -8,8 +8,8 @@ def update_pr(pr, pull_requests, config):
 
 def write_pr(pr, pull_requests):
     if pr[0] not in pull_requests:
-        pull_requests[pr[0]] = {'title': pr[1]['title'],
-                                'body': pr[1]['body'], 'references': {}}
+        pr[1]['references'] = {}
+        pull_requests[pr[0]] = pr[1]
 
 
 def update_issue(issue, issues, config):
@@ -25,6 +25,6 @@ def write_issue(issue, issues, config):
                 if label['name'] in config['type_labels']:
                     labels.append(label['name'])
 
-            issues['labels'] = labels
-            issue['solved_by'] = {}
-            issues[issue[0]] = issue
+            issue[1]['labels'] = labels
+            issue[1]['solved_by'] = {}
+            issues[issue[0]] = issue[1]
