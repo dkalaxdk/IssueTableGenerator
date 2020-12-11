@@ -17,4 +17,4 @@ The config file contains 8 different configurations:
 6. Language: The output language of the table, this can either be markdown or latex.
 7. Per_page: Sets the amount of searches per "page", this is not going to change the output of the script, but can be used to limit the amount of items searched i.e if you only want 30 results.
 8. Labels: This is a list, formatted in the same manner as repositories, which will filter the output, to only include issues containing these elements.
-9. Type_labels: These labels will be included in the "type" section of the output.
+9. Type_labels: These self will be included in the "type" section of the output.

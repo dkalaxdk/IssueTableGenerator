@@ -1,6 +1,8 @@
 import json
 import codecs
-from helpers import filter_functions as ff, fetcher_functions as fetcher, reference_manager as rr
+from helpers.filter_functions  import *
+from helpers.fetcher_functions import *
+from helpers.reference_manager import *
 from helpers.formatter import MarkdownFormatter, LatexFormatter
 
 
@@ -37,11 +39,11 @@ def main(config=None):
     if config is None:
         config = config_reader()
     print("Fetching data...")
-    pull_requests_and_issues = fetcher.fetch_data(config)
+    pull_requests_and_issues = fetch_data(config)
     print("Sorting outputs")
-    pull_requests_and_issues = ff.filter_data(config, pull_requests_and_issues)
+    pull_requests_and_issues = filter_data(config, pull_requests_and_issues)
 
-    rr.solved_by_finder(pull_requests_and_issues)
+    solved_by_finder(pull_requests_and_issues)
     print("Generating file")
     output_generator(pull_requests_and_issues, config)
     print("File generated")

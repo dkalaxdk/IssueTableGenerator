@@ -40,7 +40,7 @@ def pr_checklist(config, pr):
             return date_time_check(pr.closed_at, config) \
                    and not string_contains_word(pr.title, config['blacklist_words_pr'])
         else:
-            return date_time_check(pr[1]['created_at'], config) \
+            return date_time_check(pr.created_at, config) \
                    and not string_contains_word(pr.title, config['blacklist_words_pr'])
 
 
@@ -70,18 +70,16 @@ def date_time_check(input_date, config):
 
 def issue_in_milestone(issue, config):
     if config['milestone']:
-        if issue.get('milestone'):
-            return issue['milestone']['title'] == config['milestone']
-        else:
-            return False
-    return True
+        return issue.milestone == config['milestone']
+    else:
+        return False
 
 
-def contains_correct_labels(config, input_item):
+def contains_correct_labels(config, issue):
     if config['required_labels']:
         for label in config['required_labels']:
-            for output_label in input_item[1]['labels']:
-                if label in output_label['name']:
+            for output_label in issue.labels:
+                if label == output_label.name:
                     return True
         return False
     return True
