@@ -37,6 +37,7 @@ def fetch_data(config):
                 count = len(response.json())
             else:
                 print("Error receiving content from GitHub")
+                print(repository[0])
                 print(response.json())
                 break
 
