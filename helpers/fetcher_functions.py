@@ -1,4 +1,7 @@
 import requests
+from classes.issues import *
+from classes.pull_requests import *
+from classes.repository import *
 
 
 def requester_functions(config, repository, page):
@@ -14,10 +17,10 @@ def requester_functions(config, repository, page):
 
 
 def fetch_data(config):
-    pull_requests_and_issues = {}
+    pull_requests_and_issues = []
     for repository in config['repositories']:
-        current_rep_pull_requests = {}
-        current_rep_issues = {}
+        current_rep_pull_requests = []
+        current_rep_issues = []
 
         page = 1
         count = config['per_page']
@@ -29,9 +32,9 @@ def fetch_data(config):
             if response.ok:
                 for output in response.json():
                     if not output.get("pull_request"):
-                        current_rep_issues[output['number']] = output
+                        current_rep_issues.append(Issue(output))
                     else:
-                        current_rep_pull_requests[output['number']] = output
+                        current_rep_pull_requests.append(Pr(output))
                 page += 1
                 response = requester_functions(config, repository, page)
                 count = len(response.json())
@@ -40,7 +43,5 @@ def fetch_data(config):
                 print(response.json())
                 break
 
-        pull_requests_and_issues[repository] = {"issues": current_rep_issues, "pr": current_rep_pull_requests}
+        pull_requests_and_issues.append(Repository(repository, current_rep_issues, current_rep_pull_requests))
     return pull_requests_and_issues
-
-
