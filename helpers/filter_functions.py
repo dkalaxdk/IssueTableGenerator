@@ -1,6 +1,7 @@
 import datetime as dt
 from helpers import item_updater as iu
 from helpers import reference_manager as rm
+from classes.repository import *
 
 
 def filter_data(config, pull_requests_and_issues):
@@ -14,7 +15,8 @@ def filter_data(config, pull_requests_and_issues):
         for issue in repository[1]['issues'].items():
             iu.update_issue(issue, issues, config)
 
-        temp_pull_requests_and_issues[repository[0]] = {"issues": issues, "pr": pull_requests}
+        current_repository = Repository(repository[0], issues, pull_requests)
+        temp_pull_requests_and_issues[current_repository.name] = current_repository
 
     return temp_pull_requests_and_issues
 
