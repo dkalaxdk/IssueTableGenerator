@@ -1,12 +1,7 @@
-class Pr:
-    number = 0
-    title = ""
-    labels = {}
-    state = ""
-    milestone = ""
-    created_at = ""
-    closed_at = ""
-    body = ""
+from classes.item import *
+
+
+class Pr(Item):
     references = {}
 
     def __init__(self, input_issue=None):

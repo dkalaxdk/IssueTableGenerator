@@ -18,9 +18,9 @@ class AbstractFormatter(ABC):
 class MarkdownFormatter(AbstractFormatter):
 
     def format(self, output_string, repository, config):
-        output_string += f"# {repository[0]}  \n"
-        issues = repository[1]['issues']
-        pull_requests = repository[1]['pr']
+        output_string += f"# {repository.name}  \n"
+        issues = repository.issues
+        pull_requests = repository.pull_requests
         # If there are issues, write this:
         if len(issues.items()) > 0:
             output_string += "## Issues  \n"
@@ -31,9 +31,9 @@ class MarkdownFormatter(AbstractFormatter):
                 for reference in issue[1]['solved_by'].items():
                     pretty_references += f"[{reference[0]}](https://github.com/aau-giraf/" \
                                          f"{reference[1]}/issues/{reference[0]}) "
-                output_string += f"|[{issue[0]}](https://github.com/aau-giraf/{repository[0]}/issues/{issue[0]}) " \
-                                 f"| {issue[1]['title']} " \
-                                 f"| {' , '.join(issue[1]['labels'])} " \
+                output_string += f"|[{issue.number}](https://github.com/aau-giraf/{repository.name}/issues/{issue.number}) " \
+                                 f"| {issue.title} " \
+                                 f"| {' , '.join(issue.labels)} " \
                                  f"| {pretty_references} | \n"
         # If there are pull requests, write this:
         if len(pull_requests.items()) > 0:
@@ -48,7 +48,7 @@ class MarkdownFormatter(AbstractFormatter):
 
                 output_string += f"| [{pull_request[0]}](https://github.com/aau-giraf/" \
                                  f"{repository[0]}/issues/{pull_request[0]}) " \
-                                 f"| {pull_request[1]['title']} " \
+                                 f"| {pull_request.title} " \
                                  f"| {pretty_references} | \n"
         return output_string
 

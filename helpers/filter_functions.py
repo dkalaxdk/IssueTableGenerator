@@ -6,16 +6,16 @@ from classes.repository import *
 
 def filter_data(config, pull_requests_and_issues):
     temp_pull_requests_and_issues = {}
-    for repository in pull_requests_and_issues.items():
+    for repository in pull_requests_and_issues:
         pull_requests = {}
         issues = {}
-        for pr in repository[1]['pr'].items():
+        for pr in repository.pull_requests:
             iu.update_pr(pr, pull_requests, config)
-            rm.pr_reference_to_issues(pr, repository[0])
-        for issue in repository[1]['issues'].items():
+            rm.pr_reference_to_issues(pr, repository.name)
+        for issue in repository.issues:
             iu.update_issue(issue, issues, config)
 
-        current_repository = Repository(repository[0], issues, pull_requests)
+        current_repository = Repository(repository.name, issues, pull_requests)
         temp_pull_requests_and_issues[current_repository.name] = current_repository
 
     return temp_pull_requests_and_issues
@@ -24,35 +24,29 @@ def filter_data(config, pull_requests_and_issues):
 def issue_checklist(config, issue):
     if config['issues_or_pr'] == "Issues" or config['issues_or_pr'] == "Both":
         if config['state'] == "closed":
-            return date_time_check(issue[1]['closed_at'], config) \
-                   and not issue_title_contains_blacklisted_word(issue[1], config) \
-                   and issue_in_milestone(issue[1], config)
+            return date_time_check(issue.closed_at, config) \
+                   and not string_contains_word(issue.title, config['blacklist_words_issue']) \
+                   and issue_in_milestone(issue, config)
 
         else:
-            return date_time_check(issue[1]['created_at'], config) \
-                   and not issue_title_contains_blacklisted_word(issue[1], config) \
-                   and issue_in_milestone(issue[1], config)
+            return date_time_check(issue.created_at, config) \
+                   and not string_contains_word(issue.title, config['blacklist_words_issue']) \
+                   and issue_in_milestone(issue, config)
 
 
 def pr_checklist(config, pr):
     if config['issues_or_pr'] == "Pull requests" or config['issues_or_pr'] == "Both":
         if config['state'] == "closed":
-            return date_time_check(pr[1]['closed_at'], config) \
-                   and not pr_title_contains_blacklisted_word(pr[1], config)
+            return date_time_check(pr.closed_at, config) \
+                   and not string_contains_word(pr.title, config['blacklist_words_pr'])
         else:
             return date_time_check(pr[1]['created_at'], config) \
-                   and not pr_title_contains_blacklisted_word(pr[1], config)
+                   and not string_contains_word(pr.title, config['blacklist_words_pr'])
 
 
-def pr_title_contains_blacklisted_word(item, config):
-    if config['blacklist_words_pr']:
-        return any(word in item['title'] for word in config['blacklist_words_pr'])
-    return False
-
-
-def issue_title_contains_blacklisted_word(item, config):
-    if config['blacklist_words_issue']:
-        return any(word in item['title'] for word in config['blacklist_words_issue'])
+def string_contains_word(title, blacklisted_words):
+    if blacklisted_words:
+        return any(word in title for word in blacklisted_words)
     return False
 
 

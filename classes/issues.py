@@ -1,12 +1,7 @@
-class Issue:
-    number = 0
-    title = ""
-    labels = {}
-    state = ""
-    milestone = ""
-    created_at = ""
-    closed_at = ""
-    body = ""
+from classes.item import *
+
+
+class Issue(Item):
     solved_by = {}
 
     def __init__(self, input_issue=None):

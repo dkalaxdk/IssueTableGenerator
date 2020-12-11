@@ -1,8 +1,14 @@
-import unittest
+from helpers.filter_functions import *
+from classes.pull_requests import *
 
-class MyTestCase(unittest.TestCase):
-    def test_something(self):
-        self.assertEqual(True, False)
 
-if __name__ == '__main__':
-    unittest.main()
+def test_string_contains_word_false():
+    title = "Something something Testing"
+    words = ["Another"]
+    assert not string_contains_word(title, words)
+
+
+def test_string_contains_word_true():
+    title = "Something something Testing"
+    words = ["Something"]
+    assert string_contains_word(title, words)

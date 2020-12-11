@@ -3,20 +3,20 @@ import re
 
 def solved_by_finder(pr_and_issues):
     for repository in pr_and_issues.items():
-        for pr in repository[1]['pr'].items():
-            for ref in pr[1]['references'].items():
+        for pr in repository[1].issues.items():
+            for ref in pr.references.items():
                 repository_name = ref[1]
                 item_id = int(ref[0])
-                if item_id in pr_and_issues[repository_name]['issues']:
+                if item_id in pr_and_issues[repository_name].issues:
                     pr_and_issues[repository_name]['issues'][item_id]['solved_by'][pr[0]] = repository[0]
 
 
 def pr_reference_to_issues(pull_request, repository):
     # Checks for references to issues, therefore this needs to be run after the two loops above
-    references = re.findall(r"/\d+|\.\d+", pull_request[1]['title'])
-    references.extend(re.findall(r"aau-giraf/\w+#\d+|#\d+", pull_request[1]['body']))
+    references = re.findall(r"/\d+|\.\d+", pull_request.title)
+    references.extend(re.findall(r"aau-giraf/\w+#\d+|#\d+", pull_request.body))
     # Ensuring each reference is unique
-    pull_request[1]['references'] = unique_list_function(references, repository)
+    pull_request.references = unique_list_function(references, repository)
 
 
 def clean_reference(input_string, repository):
