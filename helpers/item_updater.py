@@ -8,7 +8,7 @@ def update_pr(pr, pull_requests, config):
 
 def write_pr(pr, pull_requests):
     if pr not in pull_requests:
-        pull_requests[pr.number] = pr
+        pull_requests.append(pr)
 
 
 def update_issue(issue, issues, config):
@@ -19,10 +19,9 @@ def update_issue(issue, issues, config):
 def write_issue(issue, issues, config):
     if issue not in issues:
         labels = []
-        if ff.contains_correct_labels(config, issue):
-            for label in issue.labels:
-                if label['name'] in config['type_labels']:
-                    labels.append(label['name'])
+        for label in issue.labels:
+            if label['name'] in config['type_labels']:
+                labels.append(label['name'])
 
-            issue.labels = labels
-            issues[issue.number] = issues
+        issue.highlighted_labels = labels
+        issues.append(issues)

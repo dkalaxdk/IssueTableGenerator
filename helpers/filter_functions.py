@@ -5,18 +5,18 @@ from classes.repository import *
 
 
 def filter_data(config, pull_requests_and_issues):
-    temp_pull_requests_and_issues = {}
+    temp_pull_requests_and_issues = []
     for repository in pull_requests_and_issues:
-        pull_requests = {}
-        issues = {}
+        pull_requests = []
+        issues = []
         for pr in repository.pull_requests:
             iu.update_pr(pr, pull_requests, config)
             rm.pr_reference_to_issues(pr, repository.name)
         for issue in repository.issues:
             iu.update_issue(issue, issues, config)
 
-        current_repository = Repository(repository.name, issues, pull_requests)
-        temp_pull_requests_and_issues[current_repository.name] = current_repository
+        temp_pull_requests_and_issues.append(
+            Repository(repository.name, issues, pull_requests))
 
     return temp_pull_requests_and_issues
 
@@ -26,12 +26,14 @@ def issue_checklist(config, issue):
         if config['state'] == "closed":
             return date_time_check(issue.closed_at, config) \
                    and not string_contains_word(issue.title, config['blacklist_words_issue']) \
-                   and issue_in_milestone(issue, config)
+                   and issue_in_milestone(issue, config) \
+                   and contains_correct_labels(config, issue)
 
         else:
             return date_time_check(issue.created_at, config) \
                    and not string_contains_word(issue.title, config['blacklist_words_issue']) \
-                   and issue_in_milestone(issue, config)
+                   and issue_in_milestone(issue, config) \
+                   and contains_correct_labels(config, issue)
 
 
 def pr_checklist(config, pr):
@@ -46,7 +48,10 @@ def pr_checklist(config, pr):
 
 def string_contains_word(title, blacklisted_words):
     if blacklisted_words:
-        return any(word in title for word in blacklisted_words)
+        for word in blacklisted_words:
+            if not word == '':
+                if word in title:
+                    return True
     return False
 
 
@@ -78,8 +83,9 @@ def issue_in_milestone(issue, config):
 def contains_correct_labels(config, issue):
     if config['required_labels']:
         for label in config['required_labels']:
-            for output_label in issue.labels:
-                if label == output_label.name:
-                    return True
+            if label:
+                for output_label in issue.labels:
+                    if label == output_label.name:
+                        return True
         return False
     return True

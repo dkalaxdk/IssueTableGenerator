@@ -1,7 +1,7 @@
 class Repository:
     name = ""
-    issues = {}
-    pull_requests = {}
+    issues = []
+    pull_requests = []
 
     def __init__(self, name, issues, pull_requests):
         self.name = name

@@ -23,8 +23,8 @@ def output_generator(pull_requests_and_issues, config):
         formatter = LatexFormatter()
 
     output_string = ""
-    for repository in pull_requests_and_issues.items():
-        output_string = formatter.format(output_string, repository[1], config)
+    for repository in pull_requests_and_issues:
+        output_string = formatter.format(output_string, repository, config)
     f.write(output_string)
     f.close()
 

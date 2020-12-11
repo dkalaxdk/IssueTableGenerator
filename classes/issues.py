@@ -4,7 +4,7 @@ from classes.label import *
 
 def get_labels(labels):
     output_labels = []
-    for label in labels.items():
+    for label in labels:
         output_labels.append(Label(label))
     return output_labels
 
@@ -16,6 +16,7 @@ class Issue(Item):
         if input_issue is None:
             pass
         else:
+            self.is_pull_request = False
             self.number = input_issue['number']
             self.title = input_issue['title']
             self.labels = get_labels(input_issue['labels'])
@@ -27,3 +28,4 @@ class Issue(Item):
             self.closed_at = input_issue['closed_at']
             self.created_at = input_issue['created_at']
             self.body = input_issue['body']
+            self.highlighted_labels = []
