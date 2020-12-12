@@ -17,9 +17,7 @@ class Pr(Item):
             self.closed_at = input_issue['closed_at']
             self.created_at = input_issue['created_at']
             self.body = input_issue['body']
-            if input_issue.get('references'):
-                self.references = input_issue['references']
-            else:
-                self.references = {}
+            self.references = {}
 
-
+    def return_key(self, key):
+        return getattr(self, key, f"{key} is not supported on pull requests")

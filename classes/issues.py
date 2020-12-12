@@ -29,3 +29,6 @@ class Issue(Item):
             self.created_at = input_issue['created_at']
             self.body = input_issue['body']
             self.highlighted_labels = []
+
+    def return_key(self, key):
+        return getattr(self, key, f"{key} is not supported on issues")

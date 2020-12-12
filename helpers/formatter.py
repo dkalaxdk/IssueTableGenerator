@@ -61,41 +61,53 @@ class LatexFormatter(AbstractFormatter):
         # If there are issues, write this:
         if len(issues) > 0:
             output_string += "\\section{Issues}  \n"
-            output_string += '\\begin{longtable}[H]{'
-            for _ in config['headers']:
-                output_string += '|l|'
-            output_string += '} \n \\hline \\endfirsthead \\\\ '
-            for item in config['headers']:
-                output_string += f' \\textbf{{ {item}}} &'
-            output_string = output_string[:-1]
-            output_string += '\\\\ \\hline\n '
-            for issue in issues:
-                output_string += f"{repository.name}\\#{issue.number} & {issue.title} & &  \\\\ \\hline \n"
+            output_string = latex_header_creation(output_string, config['issue_headers'])
+            output_string = latex_table_creation(output_string, config['issue_headers'], config['issue_table_content'],
+                                                 issues)
             output_string += "\\caption{Text} \n\\label{tab:my_tab} \n\\end{longtable} \n \n"
-
         # If there are pull requests, write this:
         if len(pull_requests) > 0:
             output_string += "\\section{Pull requests}  \n"
-            output_string += '\\begin{longtable}[H]{'
-            # Header creation
-
-            # Creates appropriate amount of |l| for the table
-            for _ in config['pr_headers']:
-                output_string += '|l|'
-            output_string += '} \n \\hline \\endfirsthead \\\\ '
-            # Add the headers defined in the config
-            for item in config['pr_headers']:
-                output_string += f' \\textbf{{ {item}}} &'
-            output_string = output_string[:-1]
-            output_string += '\\\\ \\hline\n '
-
-            # Table content creator:
-            extra_table_markers = len(config['pr_headers']) - len(config['pr_table_content'])
-            for pull_request in pull_requests:
-                for content_key in config['pr_table_content']:
-                    output_string += f"{pull_request.return_key(key=content_key)} &"
-                output_string = output_string[:-1]
-                for _ in range(extra_table_markers):
-                    output_string += " & "
-                output_string += "\\\\ \\hline \n"
+            output_string = latex_header_creation(output_string, config['pr_headers'])
+            output_string = latex_table_creation(output_string, config['pr_headers'], config['pr_table_content'],
+                                                 pull_requests)
+            output_string += "\\caption{Text} \n\\label{tab:my_tab} \n\\end{longtable} \n \n"
         return output_string
+
+
+def latex_header_creation(input_string, headers):
+    input_string += '\\begin{longtable}[H]{'
+    # Creates appropriate amount of |l| for the table
+    for _ in headers:
+        input_string += '|l|'
+    input_string += '} \n \\hline \\endfirsthead \\\\ '
+    # Add the headers defined in the config
+    for item in headers:
+        input_string += f' \\textbf{{{item}}} &'
+    input_string = input_string[:-1]
+    input_string += '\\\\ \\hline\n '
+    return input_string
+
+
+def latex_table_creation(input_string, headers, table_content, items):
+    # Table content creator:
+    extra_table_markers = len(headers) - len(table_content)
+    for item in items:
+        for content_key in table_content:
+            content = item.return_key(key=content_key)
+            if isinstance(content, dict):
+                if len(content) > 0:
+                    for element in content.items():
+                        input_string += f"\\href{{https://github.com/aau-giraf/" \
+                                        f"{element[1]}/issues/{element[0]}}}{{{element[0]}}}"
+                    input_string += "&"
+            else:
+                input_string += f"{content} &"
+        input_string = input_string[:-1]
+        for _ in range(extra_table_markers):
+            input_string += " & "
+        input_string += "\\\\ \\hline \n"
+    return input_string
+
+def markdown_table_creation():
+

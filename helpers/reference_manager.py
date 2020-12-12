@@ -3,12 +3,13 @@ import re
 
 def solved_by_finder(pr_and_issues):
     for repository in pr_and_issues:
-        for pr in repository.issues:
+        for pr in repository.pull_requests:
             for ref in pr.references:
                 repository_name = ref[1]
                 item_id = int(ref[0])
-                if item_id in pr_and_issues[repository_name].issues:
-                    pr_and_issues[repository_name]['issues'][item_id]['solved_by'][pr[0]] = repository[0]
+                issue_to_update = next((x for x in repository.issues if x.number == item_id), None)
+                if issue_to_update:
+                    issue_to_update.solved_by[pr.number] = repository_name
 
 
 def pr_reference_to_issues(pull_request, repository):
@@ -16,7 +17,8 @@ def pr_reference_to_issues(pull_request, repository):
     references = re.findall(r"/\d+|\.\d+", pull_request.title)
     references.extend(re.findall(r"aau-giraf/\w+#\d+|#\d+", pull_request.body))
     # Ensuring each reference is unique
-    pull_request.references = unique_list_function(references, repository)
+    output = unique_list_function(references, repository)
+    pull_request.references = output
 
 
 def clean_reference(input_string, repository):
