@@ -3,13 +3,15 @@ import re
 
 def solved_by_finder(pr_and_issues):
     for repository in pr_and_issues:
-        for pr in repository.pull_requests:
-            for ref in pr.references:
-                repository_name = ref[1]
-                item_id = int(ref[0])
-                issue_to_update = next((x for x in repository.issues if x.number == item_id), None)
-                if issue_to_update:
-                    issue_to_update.solved_by[pr.number] = repository_name
+        for pull_request in repository.pull_requests:
+            for reference in pull_request.references.items():
+                repo_to_update = next((repo for repo in pr_and_issues if repo.name == reference[1]), None)
+                if repo_to_update:
+                    issue_to_update = next(
+                        (issue for issue in repo_to_update.issues if issue.number == int(reference[0])),
+                        None)
+                    if issue_to_update:
+                        issue_to_update.solved_by[pull_request.number] = reference[1]
 
 
 def pr_reference_to_issues(pull_request, repository):
