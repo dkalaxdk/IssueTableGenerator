@@ -43,7 +43,7 @@ def main(config=None):
     print("Sorting outputs")
     pull_requests_and_issues = filter_data(config, pull_requests_and_issues)
 
-    solved_by_finder(pull_requests_and_issues)
+    pull_requests_and_issues = solved_by_finder(pull_requests_and_issues)
     print("Generating file")
     output_generator(pull_requests_and_issues, config)
     print("File generated")
