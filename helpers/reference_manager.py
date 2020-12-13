@@ -1,17 +1,16 @@
 import re
 
 
-def solved_by_finder(pr_and_issues):
-    for repository in pr_and_issues:
+def solved_by_finder(repositories):
+    for repository in repositories:
         for pull_request in repository.pull_requests:
             for reference in pull_request.references.items():
-                repo_to_update = next((repo for repo in pr_and_issues if repo.name == reference[1]), None)
-                if repo_to_update:
-                    issue_to_update = next(
-                        (issue for issue in repo_to_update.issues if issue.number == int(reference[0])),
-                        None)
-                    if issue_to_update:
-                        issue_to_update.solved_by[pull_request.number] = reference[1]
+                for i, repository_to_update in enumerate(repositories):
+                    if repository_to_update.name == reference[1]:
+                        for x, issue in enumerate(repository_to_update.issues):
+                            if issue.number == reference[0]:
+                                repositories[i].issues[x].solved_by[pull_request.number] = repository.name
+    return repositories
 
 
 def pr_reference_to_issues(pull_request, repository):

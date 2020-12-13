@@ -28,9 +28,9 @@ def issue_checklist(config, issue):
         else:
             compare_date = issue.created_at
         return date_time_check(compare_date, config) \
-            and issue_in_milestone(issue, config) \
-            and contains_correct_labels(config, issue) \
-            and not string_contains_word(issue.title, config['blacklist_words_issue'])
+               and issue_in_milestone(issue, config) \
+               and contains_correct_labels(config, issue) \
+               and not string_contains_word(issue.title, config['blacklist_words_issue'])
 
 
 def pr_checklist(config, pr):
@@ -40,7 +40,7 @@ def pr_checklist(config, pr):
         else:
             compare_date = pr.created_at
         return date_time_check(compare_date, config) \
-            and not string_contains_word(pr.title, config['blacklist_words_pr'])
+               and not string_contains_word(pr.title, config['blacklist_words_pr'])
 
 
 def string_contains_word(title, blacklisted_words):

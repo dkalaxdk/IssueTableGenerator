@@ -23,14 +23,16 @@ class MarkdownFormatter(AbstractFormatter):
         # If there are issues, write this:
         if len(issues) > 0:
             output_string += "## Issues  \n"
-            output_string += markdown_header_creation(output_string, config['issue_headers'])
-            output_string += markdown_table_creation(output_string, config['issue_headers'],
-                                                     config['issue_table_content'], issues)
+            output_string = markdown_header_creation(output_string, config['issue_headers'])
+            output_string = markdown_table_creation(output_string, config['issue_headers'],
+                                                    config['issue_table_content'], issues)
+            output_string += "\n \n \n"
         if len(pull_requests) > 0:
             output_string += "## Pull requests   \n"
-            output_string += markdown_header_creation(output_string, config['pr_headers'])
-            output_string += markdown_table_creation(output_string, config['pr_headers'],
-                                                     config['pr_table_content'], pull_requests)
+            output_string = markdown_header_creation(output_string, config['pr_headers'])
+            output_string = markdown_table_creation(output_string, config['pr_headers'],
+                                                    config['pr_table_content'], pull_requests)
+            output_string += "\n \n \n"
         return output_string
 
 
@@ -97,15 +99,16 @@ def markdown_header_creation(input_string, headers):
     input_string += "|"
     for item in headers:
         input_string += f'{item} |'
-    input_string += "|"
+    input_string += " \n |"
     for _ in headers:
         input_string += ':---------:|'
+    input_string += "\n"
     return input_string
 
 
 def markdown_table_creation(input_string, headers, table_content, items):
+    extra_table_markers = len(headers) - len(table_content)
     for item in items:
-        extra_table_markers = len(headers) - len(table_content)
         for content_key in table_content:
             content = item.return_key(key=content_key)
             if isinstance(content, dict):
@@ -113,10 +116,9 @@ def markdown_table_creation(input_string, headers, table_content, items):
                     for element in content.items():
                         input_string += f"[{element[0]}](https://github.com/aau-giraf/" \
                                         f"{element[1]}/issues/{element[0]}) "
-                    input_string += "|"
             else:
                 input_string += f"{content} |"
         for _ in range(extra_table_markers):
-            input_string += " | "
-
+            input_string += " |"
+        input_string += " \n"
     return input_string
