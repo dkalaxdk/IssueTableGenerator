@@ -2,12 +2,10 @@
   "token": "",
   "username": "",
   "password": "",
-  "rep_owner": "aau-giraf",
+  "rep_owner": "test_owner",
   "repositories": [
-    "weekplanner",
-    "web-api",
-    "api_client",
-    "wiki"
+    "rep1",
+    "rep2"
   ],
   "from_date": "2020-09-01",
   "to_date": "",
