@@ -17,11 +17,11 @@ def update_issue(issue, issues, config):
 
 
 def write_issue(issue, issues, config):
-    if issue not in issues:
+    if not (issue in issues):
         labels = []
         for label in issue.labels:
-            if label['name'] in config['type_labels']:
-                labels.append(label['name'])
+            if label.name in config['type_labels']:
+                labels.append(label.name)
 
         issue.highlighted_labels = labels
-        issues.append(issues)
+        issues.append(issue)

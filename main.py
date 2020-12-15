@@ -12,7 +12,7 @@ from helpers.formatter import MarkdownFormatter, LatexFormatter
 
 # If the language is not defined correctly this will not work correctly
 # But it should not be the responsibility of this class to validate it
-def output_generator(pull_requests_and_issues, config):
+def output_generator(repositories, config):
     # This can be generalised to support any format
     # and remove the sequence of 'if' statments
     if config['language'] == "markdown":
@@ -23,7 +23,7 @@ def output_generator(pull_requests_and_issues, config):
         formatter = LatexFormatter()
 
     output_string = ""
-    for repository in pull_requests_and_issues:
+    for repository in repositories:
         output_string = formatter.format(output_string, repository, config)
     f.write(output_string)
     f.close()
@@ -43,7 +43,7 @@ def main(config=None):
     print("Sorting outputs")
     pull_requests_and_issues = filter_data(config, pull_requests_and_issues)
 
-    solved_by_finder(pull_requests_and_issues)
+    pull_requests_and_issues = solved_by_finder(pull_requests_and_issues)
     print("Generating file")
     output_generator(pull_requests_and_issues, config)
     print("File generated")

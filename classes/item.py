@@ -10,4 +10,13 @@ class Item:
     is_pull_request = bool
 
     def return_key(self, key):
-        return getattr(self, key, f"{key} is not supported")
+        pass
+
+    def __eq__(self, other):
+        if isinstance(other, int):
+            return self.number == other
+        if not isinstance(other, Item):
+            # don't attempt to compare against unrelated types
+            return False
+
+        return self.number == other.number
