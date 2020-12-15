@@ -5,12 +5,21 @@ def solved_by_finder(repositories):
     for repository in repositories:
         for pull_request in repository.pull_requests:
             for reference in pull_request.references.items():
-                for i, repository_to_update in enumerate(repositories):
-                    if repository_to_update.name == reference[1]:
-                        for x, issue in enumerate(repository_to_update.issues):
-                            if issue.number == reference[0]:
-                                repositories[i].issues[x].solved_by[pull_request.number] = repository.name
+                repository_index = return_list_number(repositories, "name", reference[1])
+                if repository_index > -1:
+                    issue_index = return_list_number(repositories[repository_index].issues, "number", reference[0])
+                    if issue_index > -1:
+                        solved_by = {pull_request.number: repository.name}
+                        repositories[repository_index].issues[issue_index].solved_by = solved_by
+
     return repositories
+
+
+def return_list_number(input_list, object_property, query):
+    for x, item in enumerate(input_list):
+        if str(item.__getattribute__(object_property)) == str(query):
+            return x
+    return -1
 
 
 def pr_reference_to_issues(pull_request, repository):

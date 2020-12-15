@@ -22,25 +22,23 @@ def filter_data(config, pull_requests_and_issues):
 
 
 def issue_checklist(config, issue):
-    if config['issues_or_pr'] == "Issues" or config['issues_or_pr'] == "Both":
-        if config['state'] == "closed":
-            compare_date = issue.closed_at
-        else:
-            compare_date = issue.created_at
-        return date_time_check(compare_date, config) \
-               and issue_in_milestone(issue, config) \
-               and contains_correct_labels(config, issue) \
-               and not string_contains_word(issue.title, config['blacklist_words_issue'])
+    if config['state'] == "closed":
+        compare_date = issue.closed_at
+    else:
+        compare_date = issue.created_at
+    return date_time_check(compare_date, config) \
+           and issue_in_milestone(issue, config) \
+           and contains_correct_labels(config, issue) \
+           and not string_contains_word(issue.title, config['blacklist_words_issue'])
 
 
 def pr_checklist(config, pr):
-    if config['issues_or_pr'] == "Pull requests" or config['issues_or_pr'] == "Both":
-        if config['state'] == "closed":
-            compare_date = pr.closed_at
-        else:
-            compare_date = pr.created_at
-        return date_time_check(compare_date, config) \
-               and not string_contains_word(pr.title, config['blacklist_words_pr'])
+    if config['state'] == "closed":
+        compare_date = pr.closed_at
+    else:
+        compare_date = pr.created_at
+    return date_time_check(compare_date, config) \
+           and not string_contains_word(pr.title, config['blacklist_words_pr'])
 
 
 def string_contains_word(title, blacklisted_words):
