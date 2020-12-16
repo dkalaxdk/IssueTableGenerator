@@ -2,7 +2,6 @@ from classes.item import *
 
 
 class Pr(Item):
-    references = {}
 
     def __init__(self, input_issue=None):
         if input_issue is None:

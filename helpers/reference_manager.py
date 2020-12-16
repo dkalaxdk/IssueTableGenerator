@@ -9,8 +9,8 @@ def solved_by_finder(repositories):
                 if repository_index > -1:
                     issue_index = return_list_number(repositories[repository_index].issues, "number", reference[0])
                     if issue_index > -1:
-                        solved_by = {pull_request.number: repository.name}
-                        repositories[repository_index].issues[issue_index].solved_by = solved_by
+                        repositories[repository_index].issues[issue_index].solved_by[
+                            pull_request.number] = repository.name
 
     return repositories
 
