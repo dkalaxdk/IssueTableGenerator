@@ -4,7 +4,7 @@ It will also add a relation between issues and pull requests, if the naming conv
 1. Copy the configFile-template.json to file named configFile.json
 2. Update the values to match your criteria.
 
-To use this script, a developer code needs to be made through [GitHub](https://github.com/settings/tokens), and placed in the config file.
+To use this script,  either a developer token needs to be made through [GitHub](https://github.com/settings/tokens), and placed in the config file, or username and password can be entered.
 Within the config file, a start and end date can also be defined, as well as the repositories that should be scanned.
 
 ## Config
