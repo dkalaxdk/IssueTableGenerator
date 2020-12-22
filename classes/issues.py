@@ -10,7 +10,7 @@ def get_labels(labels):
 
 
 class Issue(Item):
-    
+
     def __init__(self, input_issue=None):
         if input_issue is None:
             pass
@@ -26,9 +26,12 @@ class Issue(Item):
                 self.milestone = ""
             self.closed_at = input_issue['closed_at']
             self.created_at = input_issue['created_at']
+            self.updated_at = input_issue['updated_at']
             self.body = input_issue['body']
             self.highlighted_labels = []
             self.solved_by = {}
 
     def return_key(self, key):
+        if key == "":
+            return ""
         return getattr(self, key, f"{key} is not supported on issues")

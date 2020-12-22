@@ -14,7 +14,7 @@ from classes.config import *
 # But it should not be the responsibility of this class to validate it
 def output_generator(repositories):
     # This can be generalised to support any format
-    # and remove the sequence of 'if' statments
+    # and remove the sequence of 'if' statements
     if ConfigManager.fetch('language') == "markdown":
         f = codecs.open("output.md", encoding='utf-8', mode='w+')
         formatter = MarkdownFormatter()

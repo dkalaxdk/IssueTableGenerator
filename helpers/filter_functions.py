@@ -27,7 +27,9 @@ def issue_checklist(issue):
         compare_date = issue.closed_at
     else:
         compare_date = issue.created_at
-    return date_time_check(compare_date) \
+    return date_time_check(compare_date, ConfigManager.fetch('from_date'), ConfigManager.fetch('to_date')) \
+           and date_time_check(issue.updated_at, ConfigManager.fetch('updated_after'),
+                               ConfigManager.fetch('updated_before')) \
            and issue_in_milestone(issue) \
            and contains_correct_labels(issue) \
            and not string_contains_word(issue.title, ConfigManager.fetch('blacklist_words_issue'))
@@ -38,7 +40,7 @@ def pr_checklist(pr):
         compare_date = pr.closed_at
     else:
         compare_date = pr.created_at
-    return date_time_check(compare_date) \
+    return date_time_check(compare_date, ConfigManager.fetch('from_date'), ConfigManager.fetch('to_date')) \
            and not string_contains_word(pr.title, ConfigManager.fetch('blacklist_words_pr'))
 
 
@@ -51,22 +53,25 @@ def string_contains_word(title, blacklisted_words):
     return False
 
 
-def date_time_check(input_date):
-    to_date = ConfigManager.fetch('to_date')
-    from_date = ConfigManager.fetch('from_date')
-    format_string = "%Y-%m-%dT%H:%M:%SZ"
-    input_format = "%Y-%m-%d"
-    closed_at_converted = dt.datetime.strptime(input_date, format_string)
-    if from_date and to_date:
-        from_date = dt.datetime.strptime(from_date, input_format)
-        to_date = dt.datetime.strptime(to_date, input_format)
-        return from_date < closed_at_converted < to_date
-    if from_date:
-        return closed_at_converted > dt.datetime.strptime(
-            from_date, input_format)
-    if to_date:
-        return closed_at_converted < dt.datetime.strptime(
-            to_date, input_format)
+def date_time_check(input_date, from_date, to_date):
+    if input_date:
+        format_string = "%Y-%m-%dT%H:%M:%SZ"
+        input_format = "%Y-%m-%d"
+        input_date_converted = dt.datetime.strptime(input_date, format_string)
+        if from_date and to_date:
+            from_date = dt.datetime.strptime(from_date, input_format)
+            to_date = dt.datetime.strptime(to_date, input_format)
+            return from_date < input_date_converted < to_date
+        if from_date:
+            from_date = dt.datetime.strptime(from_date, input_format)
+            return input_date_converted > dt.datetime.strptime(
+                from_date, input_format)
+        if to_date:
+            to_date = dt.datetime.strptime(to_date, input_format)
+            return input_date_converted < dt.datetime.strptime(
+                to_date, input_format)
+        else:
+            return True
     else:
         return True
 

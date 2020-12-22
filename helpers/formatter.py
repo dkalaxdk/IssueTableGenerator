@@ -94,6 +94,8 @@ def latex_table_creation(input_string, headers, table_content, items, repository
                         input_string += f"\\href{{https://github.com/aau-giraf/" \
                                         f"{element[1]}/issues/{element[0]}}}{{{element[0]}}}"
                     input_string += "&"
+            elif content_key == "number":
+                input_string += f"\\textit{{{repository}}}\\#{content} &"
             else:
                 input_string += f"{content} &"
         input_string = input_string[:-1]
