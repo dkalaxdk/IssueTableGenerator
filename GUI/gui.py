@@ -21,6 +21,8 @@ def data_converter(data):
         'issue_table_content',
         'pr_headers',
         'pr_table_content'
+        'updated_after'
+        'updated_before'
     ])
     return data
 
@@ -40,6 +42,8 @@ layout = [
     [sg.Text('Repositories ( separated by commas)'), sg.InputText(key='repositories')],
     [sg.Text('From date ( year-month-day)'), sg.InputText(key='from_date')],
     [sg.Text('To date ( year-month-day)'), sg.InputText(key='to_date')],
+    [sg.Text('Updated after ( year-month-day)'), sg.InputText(key='updated_after')],
+    [sg.Text('Updated before ( year-month-day)'), sg.InputText(key='updated_before')],
     [sg.Text('State (open,closed,all)'), sg.Combo(['open', 'closed', 'all'], default_value='all', key='state')],
     [sg.Text('Language'), sg.Combo(['markdown', 'latex'], default_value='markdown', key='language')],
     [sg.Text('Results per page'), sg.InputText(key='per_page')],

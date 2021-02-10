@@ -4,17 +4,30 @@ It will also add a relation between issues and pull requests, if the naming conv
 1. Copy the configFile-template.json to file named configFile.json
 2. Update the values to match your criteria.
 
-To use this script, a developer code needs to be made through [GitHub](https://github.com/settings/tokens), and placed in the config file.
-Within the config file, a start and end date can also be defined, as well as the repositories that should be scanned.
+The script can either be used, by inserting a GitHub username and password, or by using a developer token.
 
 ## Config
-The config file contains 8 different configurations:
-1. Token: This is the token you should generate from [GitHub](https://github.com/settings/tokens).
-2. Repositories: This is a list of the repositories that should be included in the search, i.e: ["weekplanner", "web-api", "api_client", "wiki"], would search the mentioned repositories.
-3. From_date: This is the date on which to start the search i.e "2020-09-01" would include all issues and pull requests made after "2020-09-01".
-4. To_date: Rather obvious, init?
-5. State: This is the state of the issue, github allows for either: open,closed or all.
-6. Language: The output language of the table, this can either be markdown or latex.
-7. Per_page: Sets the amount of searches per "page", this is not going to change the output of the script, but can be used to limit the amount of items searched i.e if you only want 30 results.
-8. Labels: This is a list, formatted in the same manner as repositories, which will filter the output, to only include issues containing these elements.
-9. Type_labels: These self will be included in the "type" section of the output.
+The script comes equipped with a basic UI, which configures the config file, based on the input. <br>
+1. Token: The token is the developer token from github.
+2. Username: Github Username
+3. Password: Github Password
+4. Repository Owner: The owner of the Github Repository
+5. Repositories: A Comma separated list of the repositories to look through.
+6. From date: A date (year-month-day) used to define when the item should have been created. (Will exclude any items created before this date)
+7. To date: Same as above, just to date.
+8. Updated after: Same as above, just when it was last updated.
+9. Updated before: Same as above, only included items which was updated before this date.
+10. State: The state of the items (open, closed, all)
+11. Language: Latex or Markdown, defines the output language
+12. Results per page: This won't change the output, but may slightly lower the ram usage.
+13. Required labels: These labels are required to be on the issues, before it is added to the output. (Comma separated list)
+14. Type labels: A comma separated list which will be used in case the Table content of issues is includes to "type"
+15. Word blacklist: A comma separated list of items which cannot be a part of the title.
+16. A comma separated list of milestones in which the items should be in.
+17. Headers: These are the headers which will be used on the table. (Comma separated list)
+18. Table content: These are the items which will be inserted into the table.(Comma separated list)
+    * On both pull requests and issues these can be:number, title, labels, state, milestone,closed_at.
+    * On issues these also can be: created_at,updated_at,body,solved_by.
+    * On pull requests, these also can be: references.
+19. Issue/Pr filter: This defines whether the output should contain Issues, Pull requests or Both.
+
