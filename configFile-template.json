@@ -2,20 +2,22 @@
   "token": "",
   "username": "",
   "password": "",
-  "rep_owner": "test_owner",
+  "rep_owner": "",
   "repositories": [
-    "rep1",
-    "rep2"
+    ""
   ],
-  "from_date": "2020-09-01",
+  "from_date": "",
   "to_date": "",
-  "state": "closed",
+  "updated_after": "",
+  "updated_before": "",
+  "state": "all",
   "language": "markdown",
   "per_page": "100",
   "required_labels": [
     ""
   ],
   "type_labels": [
+    "",
     ""
   ],
   "blacklist_words_issue": [
@@ -25,5 +27,27 @@
     ""
   ],
   "milestone": "",
-  "issues_or_pr": ""
+  "pr_headers": [
+    "Number",
+    "Title",
+    "Ref"
+  ],
+  "pr_table_content": [
+    "number",
+    "title",
+    "references"
+  ],
+  "issue_headers": [
+    "Issue NR",
+    "Title",
+    "Status",
+    "Type"
+  ],
+  "issue_table_content": [
+    "number",
+    "title",
+    "",
+    "highlighted_labels"
+  ],
+  "issues_or_pr": "Both"
 }
